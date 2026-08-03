@@ -609,60 +609,74 @@ h3 { font-size: 1.25rem; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Logo Styling */
+.logo-img {
+  width: 32px;
+  height: auto;
+  object-fit: contain;
+}
+.bg-transparent {
+  background: transparent !important;
+}
+
+/* Menu Toggle & Overlay */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.menu-toggle:hover {
+  background-color: var(--bg-body);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 900;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard-layout {
     flex-direction: column;
   }
   
-  .sidebar {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
+  .menu-toggle {
+    display: inline-flex;
     align-items: center;
-    padding: 0 0.5rem;
-    overflow-x: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
   }
   
-  .sidebar::-webkit-scrollbar {
-    display: none;
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left var(--transition-normal);
   }
   
-  .sidebar-header {
-    display: none;
-  }
-  
-  .sidebar-nav {
-    display: flex;
-    flex-direction: row;
-    padding: 0.5rem 0;
-    gap: 0.25rem;
-    flex: none;
-  }
-  
-  .nav-item {
-    margin-bottom: 0;
-  }
-  
-  .nav-link {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
-  }
-  
-  .sidebar-footer {
-    border-top: none;
-    border-left: 1px solid rgba(255,255,255,0.1);
-    padding: 0.5rem 0 0.5rem 0.5rem;
-    margin-left: 0.25rem;
-    flex: none;
-  }
-  
-  .sidebar-footer .nav-link {
-    white-space: nowrap;
+  .sidebar.active {
+    left: 0;
   }
   
   .topbar {

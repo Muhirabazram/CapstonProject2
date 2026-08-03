@@ -62,6 +62,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Mobile Sidebar Toggle
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  if (menuToggle && sidebar && sidebarOverlay) {
+    const toggleSidebar = () => {
+      sidebar.classList.toggle('active');
+      sidebarOverlay.classList.toggle('active');
+    };
+
+    menuToggle.addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking a nav link on mobile
+    const mobileNavLinks = sidebar.querySelectorAll('.nav-link');
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      });
+    });
+  }
+
   // Login Form Submission simulation
   const loginForm = document.getElementById('loginForm');
   if (loginForm) {

@@ -10,9 +10,9 @@
 
     <div class="dashboard-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="logo-icon">M</div>
+                <img src="assets/img/logo-kampus.png" alt="Logo Kampus" class="logo-img">
                 <h3>Portal Mahasiswa</h3>
             </div>
             <ul class="sidebar-nav">
@@ -47,7 +47,12 @@
         <main class="main-content">
             <!-- Topbar -->
             <header class="topbar">
-                <h2>Portal Akademik</h2>
+                <div class="flex items-center gap-2">
+                    <button class="menu-toggle" id="menuToggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <h2>Portal Akademik</h2>
+                </div>
                 <div class="topbar-right">
                     <div class="user-profile">
                         <div class="avatar" style="background-color: var(--secondary-color);">AS</div>
@@ -215,6 +220,8 @@
             </div>
         </main>
     </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Modals -->
     <!-- Modal Sukses Pengajuan -->
