@@ -4,8 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewSections = document.querySelectorAll('.view-section');
 
   if (navLinks.length > 0 && viewSections.length > 0) {
+    const topbarTitle = document.getElementById('topbar-title');
+
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
+        const targetId = link.getAttribute('data-target');
+        if (!targetId) return; // skip links without data-target (e.g., Profil Saya)
         e.preventDefault();
         
         // Remove active class from all links
@@ -13,8 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add active class to clicked link
         link.classList.add('active');
         
-        // Get target view
-        const targetId = link.getAttribute('data-target');
+        // Update topbar title dynamically
+        if (topbarTitle) {
+          const newTitle = link.getAttribute('data-title') || link.textContent.trim();
+          topbarTitle.textContent = newTitle;
+        }
         
         // Hide all views
         viewSections.forEach(view => {
@@ -27,6 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
           targetView.classList.add('active');
         }
       });
+    });
+  }
+
+  // Logout Button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = 'index.html';
     });
   }
 

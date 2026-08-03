@@ -11,7 +11,7 @@
     <div class="dashboard-layout">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
+            <div class="sidebar-header" style="justify-content: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
                 <img src="assets/img/logo-kampus.png" alt="Logo Kampus" class="logo-img">
             </div>
             
@@ -29,25 +29,25 @@
             <ul class="sidebar-nav">
                 <div class="nav-section-title">Menu Utama</div>
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" data-target="view-dashboard">
+                    <a href="#" class="nav-link active" data-target="view-dashboard" data-title="Dashboard">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" data-target="view-kategori">
+                    <a href="#" class="nav-link" data-target="view-kategori" data-title="Kategori Surat">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         Kategori Surat
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" data-target="view-pengajuan">
+                    <a href="#" class="nav-link" data-target="view-pengajuan" data-title="Pengajuan Surat">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Pengajuan Surat
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" data-target="view-mahasiswa">
+                    <a href="#" class="nav-link" data-target="view-mahasiswa" data-title="Data Mahasiswa">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Data Mahasiswa
                     </a>
@@ -61,7 +61,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="index.html" class="nav-link danger">
+                    <a href="index.html" class="nav-link danger" id="logoutBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Keluar
                     </a>
@@ -88,7 +88,6 @@
                 <div id="view-dashboard" class="view-section active">
                     <div class="page-header">
                         <div>
-                            <h1>Dashboard Overview</h1>
                             <p class="text-muted">Ringkasan aktivitas sistem administrasi surat.</p>
                         </div>
                     </div>
@@ -171,7 +170,6 @@
                 <div id="view-kategori" class="view-section">
                     <div class="page-header">
                         <div>
-                            <h1>Kategori Surat</h1>
                             <p class="text-muted">Kelola jenis-jenis surat beserta prasyaratnya.</p>
                         </div>
                         <button class="btn btn-primary" data-modal-target="modal-tambah-kategori">+ Tambah Kategori</button>
@@ -221,7 +219,6 @@
                 <div id="view-pengajuan" class="view-section">
                     <div class="page-header">
                         <div>
-                            <h1>Pengajuan Surat</h1>
                             <p class="text-muted">Verifikasi prasyarat dan update status pengajuan.</p>
                         </div>
                         <div>
@@ -272,7 +269,6 @@
                 <div id="view-mahasiswa" class="view-section">
                     <div class="page-header">
                         <div>
-                            <h1>Data Mahasiswa</h1>
                             <p class="text-muted">Kelola data mahasiswa untuk akses sistem.</p>
                         </div>
                         <button class="btn btn-primary" data-modal-target="modal-import-mahasiswa">

@@ -11,7 +11,7 @@
     <div class="dashboard-layout">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
+            <div class="sidebar-header" style="justify-content: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
                 <img src="assets/img/logo-kampus.png" alt="Logo Kampus" class="logo-img">
             </div>
 
@@ -21,7 +21,7 @@
                 </div>
                 <div class="user-info">
                     <div class="text-muted" style="font-size: 0.75rem;">Selamat Datang,</div>
-                    <div class="name" title="Muhammad Irfan Abdul Aziz Ramdani">Muhammad Irfan Abdul Aziz Ramdani</div>
+                    <div class="name" title="Andi Susanto">Andi Susanto</div>
                     <div class="role">Mahasiswa</div>
                 </div>
             </div>
@@ -29,19 +29,19 @@
             <ul class="sidebar-nav">
                 <div class="nav-section-title">Menu Utama</div>
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" data-target="view-dashboard">
+                    <a href="#" class="nav-link active" data-target="view-dashboard" data-title="Dashboard">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                         Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" data-target="view-ajukan">
+                    <a href="#" class="nav-link" data-target="view-ajukan" data-title="Ajukan Surat Baru">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         Ajukan Surat Baru
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" data-target="view-riwayat">
+                    <a href="#" class="nav-link" data-target="view-riwayat" data-title="Riwayat Pengajuan">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Riwayat Pengajuan
                     </a>
@@ -55,7 +55,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="index.html" class="nav-link danger">
+                    <a href="index.html" class="nav-link danger" id="logoutBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Keluar
                     </a>
@@ -82,7 +82,6 @@
                 <div id="view-dashboard" class="view-section active">
                     <div class="page-header">
                         <div>
-                            <h1>Selamat Datang, Andi!</h1>
                             <p class="text-muted">Pantau status pengajuan surat akademik Anda di sini.</p>
                         </div>
                         <button class="btn btn-primary" onclick="document.querySelector('[data-target=\'view-ajukan\']').click()">+ Buat Pengajuan Baru</button>
@@ -125,7 +124,6 @@
                 <div id="view-ajukan" class="view-section">
                     <div class="page-header">
                         <div>
-                            <h1>Ajukan Surat Baru</h1>
                             <p class="text-muted">Isi formulir dan unggah prasyarat yang dibutuhkan.</p>
                         </div>
                     </div>
@@ -178,7 +176,6 @@
                 <div id="view-riwayat" class="view-section">
                     <div class="page-header">
                         <div>
-                            <h1>Riwayat Pengajuan</h1>
                             <p class="text-muted">Daftar semua permohonan surat yang pernah Anda ajukan.</p>
                         </div>
                     </div>
