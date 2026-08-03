@@ -200,31 +200,22 @@ h3 { font-size: 1.25rem; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  /* Ganti URL di bawah ini dengan lokasi gambar Anda */
+  background: url('../img/bg-login.jpg') center/cover no-repeat;
   position: relative;
   overflow: hidden;
+  padding: 1rem;
 }
 
 .auth-layout::before {
   content: '';
   position: absolute;
-  top: -20%;
-  left: -10%;
-  width: 50%;
-  height: 50%;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(255,255,255,0) 70%);
-  border-radius: 50%;
-}
-
-.auth-layout::after {
-  content: '';
-  position: absolute;
-  bottom: -20%;
-  right: -10%;
-  width: 50%;
-  height: 50%;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(255,255,255,0) 70%);
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6); /* Overlay gelap */
+  z-index: 1;
 }
 
 .auth-card {
@@ -616,4 +607,91 @@ h3 { font-size: 1.25rem; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 0.5rem;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .sidebar-header {
+    display: none;
+  }
+  
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    padding: 0.5rem 0;
+    gap: 0.25rem;
+    flex: none;
+  }
+  
+  .nav-item {
+    margin-bottom: 0;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  
+  .sidebar-footer {
+    border-top: none;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    margin-left: 0.25rem;
+    flex: none;
+  }
+  
+  .sidebar-footer .nav-link {
+    white-space: nowrap;
+  }
+  
+  .topbar {
+    padding: 0 1rem;
+    height: 60px;
+  }
+  
+  .content-area {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
 }
