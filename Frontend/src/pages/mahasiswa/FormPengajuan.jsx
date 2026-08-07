@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Modal from '../../components/Modal'
 import { useToast } from '../../context/ToastContext'
-import { CheckCircle, ArrowRight, ArrowLeft, Send, FileText, Upload } from 'lucide-react'
+import { CheckCircle, ArrowRight, ArrowLeft, Send, FileText, AlertCircle } from 'lucide-react'
 
 export default function FormPengajuan() {
   const navigate = useNavigate()
@@ -15,6 +15,7 @@ export default function FormPengajuan() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [loading, setLoading] = useState(true)
   const [step, setStep] = useState(1)
+  const [errors, setErrors] = useState({})
   const toast = useToast()
 
   useEffect(() => {
@@ -26,14 +27,80 @@ export default function FormPengajuan() {
     setSelectedCat(cat || null)
     setFormValues({})
     setFiles({})
+    setErrors({})
   }
 
   const handleValueChange = (varName, value) => {
     setFormValues((prev) => ({ ...prev, [varName]: value }))
+    if (errors[varName]) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[varName]
+        return next
+      })
+    }
   }
 
   const handleFileChange = (reqId, file) => {
     setFiles((prev) => ({ ...prev, [reqId]: file }))
+    if (errors[`req_${reqId}`]) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[`req_${reqId}`]
+        return next
+      })
+    }
+  }
+
+  const validateStep1 = () => {
+    if (!selectedCat) {
+      toast.error('Pilih jenis surat terlebih dahulu')
+      return false
+    }
+    return true
+  }
+
+  const validateStep2 = () => {
+    const newErrors = {}
+    let valid = true
+
+    ;(selectedCat.variables || []).forEach((v) => {
+      if (!formValues[v.nama_variabel] || !formValues[v.nama_variabel].trim()) {
+        newErrors[v.nama_variabel] = `${v.nama_variabel.replace(/_/g, ' ')} wajib diisi`
+        valid = false
+      }
+    })
+
+    ;(selectedCat.requirements || []).forEach((r) => {
+      if (!files[r.id]) {
+        newErrors[`req_${r.id}`] = `${r.nama_syarat} wajib diupload`
+        valid = false
+      }
+    })
+
+    setErrors(newErrors)
+    if (!valid) toast.error('Lengkapi semua data yang wajib diisi')
+    return valid
+  }
+
+  const handleNext = () => {
+    if (step === 1 && validateStep1()) {
+      setStep(2)
+    } else if (step === 2 && validateStep2()) {
+      setStep(3)
+    }
+  }
+
+  const handleBack = () => {
+    if (step === 3) {
+      setStep(2)
+    } else if (step === 2) {
+      setSelectedCat(null)
+      setFormValues({})
+      setFiles({})
+      setErrors({})
+      setStep(1)
+    }
   }
 
   const handleSubmit = async () => {
@@ -85,6 +152,9 @@ export default function FormPengajuan() {
     { num: 3, label: 'Review & Kirim' },
   ]
 
+  const hasVariables = selectedCat && (selectedCat.variables || []).length > 0
+  const hasRequirements = selectedCat && (selectedCat.requirements || []).length > 0
+
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Header */}
@@ -122,7 +192,11 @@ export default function FormPengajuan() {
       {step === 1 && (
         <div className="card p-6 space-y-4">
           <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Pilih Kategori Surat</h3>
-          <select onChange={(e) => handleCategoryChange(e.target.value)} className="select-base" required>
+          <select
+            value={selectedCat?.id || ''}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="select-base"
+          >
             <option value="">-- Pilih Jenis Surat --</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
@@ -130,7 +204,7 @@ export default function FormPengajuan() {
           </select>
           {selectedCat && (
             <div className="flex justify-end">
-              <button onClick={() => setStep(2)} className="btn-primary flex items-center gap-2">
+              <button onClick={handleNext} className="btn-primary flex items-center gap-2">
                 Selanjutnya <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -142,30 +216,35 @@ export default function FormPengajuan() {
       {step === 2 && selectedCat && (
         <div className="space-y-4">
           {/* Form Values */}
-          {(selectedCat.variables || []).length > 0 && (
+          {hasVariables && (
             <div className="card p-6 space-y-4">
               <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Isian Data</h3>
               {selectedCat.variables.map((v) => (
                 <div key={v.id}>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                    {v.nama_variabel.replace(/_/g, ' ')}
+                    {v.nama_variabel.replace(/_/g, ' ')} <span className="text-red-500">*</span>
                   </label>
                   {v.tipe_input_html === 'textarea' ? (
                     <textarea
+                      value={formValues[v.nama_variabel] || ''}
                       onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
-                      className="input-base"
+                      className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
                       rows={3}
                       placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
-                      required
                     />
                   ) : (
                     <input
                       type={v.tipe_input_html || 'text'}
+                      value={formValues[v.nama_variabel] || ''}
                       onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
-                      className="input-base"
+                      className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
                       placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
-                      required
                     />
+                  )}
+                  {errors[v.nama_variabel] && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors[v.nama_variabel]}
+                    </p>
                   )}
                 </div>
               ))}
@@ -173,7 +252,7 @@ export default function FormPengajuan() {
           )}
 
           {/* Requirements Upload */}
-          {(selectedCat.requirements || []).length > 0 && (
+          {hasRequirements && (
             <div className="card p-6 space-y-4">
               <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Dokumen Prasyarat</h3>
               <ul className="text-xs list-disc list-inside space-y-1" style={{ color: 'var(--text-muted)' }}>
@@ -186,25 +265,27 @@ export default function FormPengajuan() {
                   <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                     Upload {r.nama_syarat} <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(Maks. 10MB)</span>
                   </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.docx"
-                      onChange={(e) => handleFileChange(r.id, e.target.files[0])}
-                      className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer"
-                      required
-                    />
-                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx"
+                    onChange={(e) => handleFileChange(r.id, e.target.files[0])}
+                    className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors[`req_${r.id}`] ? 'file:bg-red-500' : ''}`}
+                  />
+                  {errors[`req_${r.id}`] && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors[`req_${r.id}`]}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(1)} className="btn-ghost flex items-center gap-2">
+            <button onClick={handleBack} className="btn-ghost flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" /> Kembali
             </button>
-            <button onClick={() => setStep(3)} className="btn-primary flex items-center gap-2">
+            <button onClick={handleNext} className="btn-primary flex items-center gap-2">
               Selanjutnya <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -222,7 +303,7 @@ export default function FormPengajuan() {
               <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{selectedCat.nama_kategori}</p>
             </div>
 
-            {selectedCat.variables && selectedCat.variables.length > 0 && (
+            {hasVariables && (
               <div>
                 <p className="section-title mb-2">Data Form</p>
                 <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
@@ -236,7 +317,7 @@ export default function FormPengajuan() {
               </div>
             )}
 
-            {selectedCat.requirements && selectedCat.requirements.length > 0 && (
+            {hasRequirements && (
               <div>
                 <p className="section-title mb-2">Dokumen</p>
                 <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
@@ -255,7 +336,7 @@ export default function FormPengajuan() {
           </div>
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(2)} className="btn-ghost flex items-center gap-2">
+            <button onClick={handleBack} className="btn-ghost flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" /> Kembali
             </button>
             <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex items-center gap-2">

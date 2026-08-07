@@ -1,9 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
 import {
   LayoutDashboard, Users, FolderOpen, FileText,
-  Download, Send, Clock, LogOut, Sun, Moon, ChevronLeft
+  Download, Send, Clock, LogOut, ChevronLeft
 } from 'lucide-react'
 
 const adminLinks = [
@@ -22,7 +21,6 @@ const mahasiswaLinks = [
 
 export default function Sidebar({ role, open, onClose }) {
   const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const links = role === 'admin' ? adminLinks : mahasiswaLinks
   const name = user?.mahasiswa?.nama || user?.username || 'User'
@@ -114,14 +112,6 @@ export default function Sidebar({ role, open, onClose }) {
 
         {/* Bottom Actions */}
         <div className="p-3 space-y-1" style={{ borderTop: '1px solid var(--border-color)' }}>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-150 hover:bg-navy-100 dark:hover:bg-navy-800"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-          </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full transition-all duration-150"

@@ -5,7 +5,7 @@ import StatusTimeline from '../../components/StatusTimeline'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Download, FileText, Clock } from 'lucide-react'
+import { Download, FileText, Clock, Eye } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -63,6 +63,18 @@ export default function RiwayatStatus() {
       toast.success('Dokumen berhasil diunduh')
     } catch {
       toast.error('Gagal mengunduh dokumen.')
+    }
+  }
+
+  const handlePreviewReqDoc = async (rrId, name) => {
+    try {
+      const response = await api.get(`/documents/requirement/${rrId}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const url = URL.createObjectURL(response.data)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch {
+      toast.error('Gagal mempreview dokumen.')
     }
   }
 
@@ -164,13 +176,22 @@ export default function RiwayatStatus() {
                       <div key={rr.id} className="flex items-center justify-between text-sm">
                         <span style={{ color: 'var(--text-secondary)' }}>{rr.requirement?.nama_syarat || 'Dokumen'}</span>
                         {rr.file_path ? (
-                          <button
-                            onClick={() => handleDownloadReqDoc(rr.id, rr.file_path.split('/').pop())}
-                            className="btn-ghost btn-sm flex items-center gap-1"
-                          >
-                            <Download className="w-3 h-3" />
-                            Unduh
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handlePreviewReqDoc(rr.id, rr.file_path.split('/').pop())}
+                              className="btn-ghost btn-sm flex items-center gap-1"
+                              title="Preview"
+                            >
+                              <Eye className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDownloadReqDoc(rr.id, rr.file_path.split('/').pop())}
+                              className="btn-ghost btn-sm flex items-center gap-1"
+                              title="Unduh"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Belum diupload</span>
                         )}

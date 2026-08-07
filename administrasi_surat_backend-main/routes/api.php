@@ -28,6 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         // Students Management
         Route::get('/students', [AdminStudentController::class, 'index']);
+        Route::post('/students', [AdminStudentController::class, 'store']);
+        Route::put('/students/{id}', [AdminStudentController::class, 'update']);
+        Route::delete('/students/{id}', [AdminStudentController::class, 'destroy']);
         Route::post('/students/import', [AdminStudentController::class, 'import']);
 
         // Categories & Templates Management
