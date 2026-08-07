@@ -1,0 +1,31 @@
+﻿# Dependencies
+Frontend/node_modules/
+administrasi_surat_backend-main/vendor/
+
+# Build output
+Frontend/dist/
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# Laravel
+administrasi_surat_backend-main/storage/*.key
+administrasi_surat_backend-main/public/hot
+administrasi_surat_backend-main/public/storage
+administrasi_surat_backend-main/.phpunit.result.cache
+administrasi_surat_backend-main/Homestead.json
+administrasi_surat_backend-main/Homestead.yaml
+administrasi_surat_backend-main/auth.json
+administrasi_surat_backend-main/npm-debug.log
+administrasi_surat_backend-main/yarn-error.log
+
+# IDE
+/.fleet
+/.idea
+/.vscode
+
+# OS
+Thumbs.db
+.DS_Store

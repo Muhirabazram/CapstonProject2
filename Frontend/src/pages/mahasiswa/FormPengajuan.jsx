@@ -1,0 +1,293 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../../api/axios'
+import Modal from '../../components/Modal'
+import { useToast } from '../../context/ToastContext'
+import { CheckCircle, ArrowRight, ArrowLeft, Send, FileText, Upload } from 'lucide-react'
+
+export default function FormPengajuan() {
+  const navigate = useNavigate()
+  const [categories, setCategories] = useState([])
+  const [selectedCat, setSelectedCat] = useState(null)
+  const [formValues, setFormValues] = useState({})
+  const [files, setFiles] = useState({})
+  const [submitting, setSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [step, setStep] = useState(1)
+  const toast = useToast()
+
+  useEffect(() => {
+    api.get('/admin/categories').then((r) => setCategories(r.data.data)).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const handleCategoryChange = (catId) => {
+    const cat = categories.find((c) => c.id === parseInt(catId))
+    setSelectedCat(cat || null)
+    setFormValues({})
+    setFiles({})
+  }
+
+  const handleValueChange = (varName, value) => {
+    setFormValues((prev) => ({ ...prev, [varName]: value }))
+  }
+
+  const handleFileChange = (reqId, file) => {
+    setFiles((prev) => ({ ...prev, [reqId]: file }))
+  }
+
+  const handleSubmit = async () => {
+    if (!selectedCat) return
+    setSubmitting(true)
+    const fd = new FormData()
+    fd.append('category_id', selectedCat.id)
+
+    let vi = 0
+    ;(selectedCat.variables || []).forEach((v) => {
+      const val = formValues[v.nama_variabel]
+      if (val) {
+        fd.append(`values[${vi}][variable_id]`, v.id)
+        fd.append(`values[${vi}][nilai_isian]`, val)
+        vi++
+      }
+    })
+
+    let ri = 0
+    ;(selectedCat.requirements || []).forEach((r) => {
+      const file = files[r.id]
+      if (file) {
+        fd.append(`requirements[${ri}][requirement_id]`, r.id)
+        fd.append(`requirements[${ri}][file]`, file)
+        ri++
+      }
+    })
+
+    try {
+      await api.post('/student/requests', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setShowSuccess(true)
+    } catch (err) {
+      const msg = err.response?.data?.errors ? Object.values(err.response.data.errors)[0][0] : err.response?.data?.message || 'Gagal mengirim pengajuan'
+      toast.error(msg)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  )
+
+  const steps = [
+    { num: 1, label: 'Pilih Kategori' },
+    { num: 2, label: 'Isi Formulir' },
+    { num: 3, label: 'Review & Kirim' },
+  ]
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Header */}
+      <div>
+        <h2 className="page-title">Buat Pengajuan Surat</h2>
+        <p className="page-description mt-1">Isi formulir dan unggah dokumen prasyarat untuk pengajuan surat.</p>
+      </div>
+
+      {/* Stepper */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between">
+          {steps.map((s, i) => (
+            <div key={s.num} className="flex items-center flex-1">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                  step >= s.num
+                    ? 'bg-primary text-white'
+                    : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
+                }`}>
+                  {step > s.num ? <CheckCircle className="w-4 h-4" /> : s.num}
+                </div>
+                <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? 'text-navy-800 dark:text-navy-100' : 'text-navy-400 dark:text-navy-600'}`}>
+                  {s.label}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-3 rounded ${step > s.num ? 'bg-primary' : 'bg-navy-200 dark:bg-navy-700'}`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: Category Selection */}
+      {step === 1 && (
+        <div className="card p-6 space-y-4">
+          <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Pilih Kategori Surat</h3>
+          <select onChange={(e) => handleCategoryChange(e.target.value)} className="select-base" required>
+            <option value="">-- Pilih Jenis Surat --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
+            ))}
+          </select>
+          {selectedCat && (
+            <div className="flex justify-end">
+              <button onClick={() => setStep(2)} className="btn-primary flex items-center gap-2">
+                Selanjutnya <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step 2: Form & Upload */}
+      {step === 2 && selectedCat && (
+        <div className="space-y-4">
+          {/* Form Values */}
+          {(selectedCat.variables || []).length > 0 && (
+            <div className="card p-6 space-y-4">
+              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Isian Data</h3>
+              {selectedCat.variables.map((v) => (
+                <div key={v.id}>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    {v.nama_variabel.replace(/_/g, ' ')}
+                  </label>
+                  {v.tipe_input_html === 'textarea' ? (
+                    <textarea
+                      onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
+                      className="input-base"
+                      rows={3}
+                      placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
+                      required
+                    />
+                  ) : (
+                    <input
+                      type={v.tipe_input_html || 'text'}
+                      onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
+                      className="input-base"
+                      placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
+                      required
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Requirements Upload */}
+          {(selectedCat.requirements || []).length > 0 && (
+            <div className="card p-6 space-y-4">
+              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Dokumen Prasyarat</h3>
+              <ul className="text-xs list-disc list-inside space-y-1" style={{ color: 'var(--text-muted)' }}>
+                {selectedCat.requirements.map((r) => (
+                  <li key={r.id}>{r.nama_syarat} ({r.tipe_file})</li>
+                ))}
+              </ul>
+              {selectedCat.requirements.map((r) => (
+                <div key={r.id}>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    Upload {r.nama_syarat} <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(Maks. 10MB)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.docx"
+                      onChange={(e) => handleFileChange(r.id, e.target.files[0])}
+                      className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer"
+                      required
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <button onClick={() => setStep(1)} className="btn-ghost flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" /> Kembali
+            </button>
+            <button onClick={() => setStep(3)} className="btn-primary flex items-center gap-2">
+              Selanjutnya <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Review */}
+      {step === 3 && selectedCat && (
+        <div className="space-y-4">
+          <div className="card p-6 space-y-4">
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Review Pengajuan</h3>
+
+            <div>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Kategori Surat</p>
+              <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{selectedCat.nama_kategori}</p>
+            </div>
+
+            {selectedCat.variables && selectedCat.variables.length > 0 && (
+              <div>
+                <p className="section-title mb-2">Data Form</p>
+                <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  {selectedCat.variables.map((v) => (
+                    <div key={v.id} className="flex gap-2 text-sm">
+                      <span className="w-36 shrink-0" style={{ color: 'var(--text-muted)' }}>{v.nama_variabel.replace(/_/g, ' ')}:</span>
+                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{formValues[v.nama_variabel] || '-'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedCat.requirements && selectedCat.requirements.length > 0 && (
+              <div>
+                <p className="section-title mb-2">Dokumen</p>
+                <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  {selectedCat.requirements.map((r) => (
+                    <div key={r.id} className="flex items-center gap-2 text-sm">
+                      <FileText className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                      <span style={{ color: 'var(--text-secondary)' }}>{r.nama_syarat}:</span>
+                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {files[r.id] ? files[r.id].name : 'Belum diupload'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between">
+            <button onClick={() => setStep(2)} className="btn-ghost flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" /> Kembali
+            </button>
+            <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex items-center gap-2">
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Kirim Pengajuan
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      <Modal open={showSuccess} onClose={() => { setShowSuccess(false); navigate('/mahasiswa/riwayat') }} title="Berhasil!">
+        <div className="text-center py-4">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-emerald-500" />
+          </div>
+          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Berhasil!</h3>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Pengajuan surat Anda berhasil dikirim. Pantau status pada menu Riwayat & Status.</p>
+          <button onClick={() => { setShowSuccess(false); navigate('/mahasiswa/riwayat') }} className="btn-primary">
+            Lihat Riwayat
+          </button>
+        </div>
+      </Modal>
+    </div>
+  )
+}
