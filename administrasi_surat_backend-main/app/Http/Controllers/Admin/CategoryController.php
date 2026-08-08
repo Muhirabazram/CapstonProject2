@@ -34,6 +34,7 @@ class CategoryController extends Controller
             'nama_kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'file_template' => 'nullable|file|mimes:docx',
+            'ttd_digital' => 'nullable|boolean',
             'requirements' => 'nullable|array',
             'requirements.*.nama_syarat' => 'required|string',
             'requirements.*.tipe_file' => 'required|string',
@@ -54,6 +55,7 @@ class CategoryController extends Controller
                 'nama_kategori' => $request->nama_kategori,
                 'deskripsi' => $request->deskripsi,
                 'file_template_path' => $templatePath,
+                'ttd_digital' => $request->boolean('ttd_digital'),
             ]);
 
             if ($request->has('requirements')) {
@@ -106,6 +108,7 @@ class CategoryController extends Controller
             'nama_kategori' => 'sometimes|required|string|max:255',
             'deskripsi' => 'nullable|string',
             'file_template' => 'nullable|file|mimes:docx',
+            'ttd_digital' => 'nullable',
             'requirements' => 'nullable|array',
             'variables' => 'nullable|array',
         ]);
@@ -126,6 +129,9 @@ class CategoryController extends Controller
             }
             if ($request->has('deskripsi')) {
                 $category->deskripsi = $request->deskripsi;
+            }
+            if ($request->has('ttd_digital')) {
+                $category->ttd_digital = $request->boolean('ttd_digital');
             }
             $category->save();
 

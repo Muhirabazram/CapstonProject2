@@ -122,7 +122,7 @@ export default function RiwayatStatus() {
                         <td className="px-6 py-3 hidden sm:table-cell" style={{ color: 'var(--text-muted)' }}>{formatDate(req.tanggal_pengajuan)}</td>
                         <td className="px-6 py-3"><StatusBadge status={req.status} /></td>
                         <td className="px-6 py-3">
-                          {req.status === 'selesai' && req.file_hasil_path && (
+                          {req.status === 'selesai' && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDownloadResult(req.id) }}
                               className="btn-primary btn-sm flex items-center gap-1"
@@ -201,20 +201,42 @@ export default function RiwayatStatus() {
                 </div>
               )}
 
+              {/* Digital Signature preview if uploaded */}
+              {selected.file_ttd_digital_path && (
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <h4 className="section-title mb-2">Tanda Tangan Digital</h4>
+                  <div className="rounded-xl p-3 border flex items-center justify-between" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={`/storage/${selected.file_ttd_digital_path}`}
+                        alt="TTD Digital"
+                        className="h-10 object-contain bg-white p-1 rounded-lg border"
+                      />
+                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        {selected.file_ttd_digital_path.split('/').pop()}
+                      </span>
+                    </div>
+                    <a
+                      href={`/storage/${selected.file_ttd_digital_path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-ghost btn-sm text-primary"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {/* Download Result */}
-              {selected.status === 'selesai' && selected.file_hasil_path && (
+              {selected.status === 'selesai' && (
                 <button
                   onClick={() => handleDownloadResult(selected.id)}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Download Surat Resmi
+                  Download Surat Resmi (.docx)
                 </button>
-              )}
-              {selected.status === 'selesai' && !selected.file_hasil_path && (
-                <div className="px-4 py-3 rounded-xl text-sm bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  Surat resmi belum tersedia. Hubungi admin.
-                </div>
               )}
             </div>
           ) : (

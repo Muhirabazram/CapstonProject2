@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('student')->group(function () {
         Route::post('/requests', [StudentRequestController::class, 'store']);
         Route::get('/requests/history', [StudentRequestController::class, 'history']);
+        Route::get('/requests/{id}/download', [StudentRequestController::class, 'downloadLetter']);
     });
 
     // Document Download Routes

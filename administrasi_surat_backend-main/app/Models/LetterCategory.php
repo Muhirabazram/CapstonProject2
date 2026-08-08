@@ -13,6 +13,11 @@ class LetterCategory extends Model
         'nama_kategori',
         'deskripsi',
         'file_template_path',
+        'ttd_digital',
+    ];
+
+    protected $casts = [
+        'ttd_digital' => 'boolean',
     ];
 
     public function requirements()

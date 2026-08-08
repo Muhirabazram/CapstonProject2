@@ -18,6 +18,9 @@ export default function FormPengajuan() {
   const [errors, setErrors] = useState({})
   const toast = useToast()
 
+  const [ttdFile, setTtdFile] = useState(null)
+  const [ttdPreview, setTtdPreview] = useState(null)
+
   useEffect(() => {
     api.get('/admin/categories').then((r) => setCategories(r.data.data)).catch(() => {}).finally(() => setLoading(false))
   }, [])
@@ -27,6 +30,8 @@ export default function FormPengajuan() {
     setSelectedCat(cat || null)
     setFormValues({})
     setFiles({})
+    setTtdFile(null)
+    setTtdPreview(null)
     setErrors({})
   }
 
@@ -47,6 +52,22 @@ export default function FormPengajuan() {
       setErrors((prev) => {
         const next = { ...prev }
         delete next[`req_${reqId}`]
+        return next
+      })
+    }
+  }
+
+  const handleTtdChange = (file) => {
+    setTtdFile(file)
+    if (file) {
+      setTtdPreview(URL.createObjectURL(file))
+    } else {
+      setTtdPreview(null)
+    }
+    if (errors.ttd) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next.ttd
         return next
       })
     }
@@ -77,6 +98,11 @@ export default function FormPengajuan() {
         valid = false
       }
     })
+
+    if (Boolean(selectedCat?.ttd_digital) && !ttdFile) {
+      newErrors.ttd = 'Tanda tangan digital (PNG/JPG) wajib diunggah'
+      valid = false
+    }
 
     setErrors(newErrors)
     if (!valid) toast.error('Lengkapi semua data yang wajib diisi')
@@ -128,6 +154,10 @@ export default function FormPengajuan() {
         ri++
       }
     })
+
+    if (ttdFile) {
+      fd.append('file_ttd_digital', ttdFile)
+    }
 
     try {
       await api.post('/student/requests', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
@@ -281,6 +311,41 @@ export default function FormPengajuan() {
             </div>
           )}
 
+          {/* Digital Signature Upload if required */}
+          {Boolean(selectedCat?.ttd_digital) && (
+            <div className="card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tanda Tangan Digital</h3>
+                <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs">Wajib</span>
+              </div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Unggah file gambar tanda tangan digital Anda (Format: PNG atau JPG, Maks 5MB). File ini akan disisipkan ke dalam dokumen surat.
+              </p>
+              <div>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  onChange={(e) => handleTtdChange(e.target.files[0])}
+                  className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors.ttd ? 'file:bg-red-500' : ''}`}
+                />
+                {errors.ttd && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {errors.ttd}
+                  </p>
+                )}
+              </div>
+              {ttdPreview && (
+                <div className="mt-2 p-3 border rounded-xl flex items-center gap-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <img src={ttdPreview} alt="Preview TTD" className="h-16 object-contain border bg-white p-1 rounded-lg" />
+                  <div className="text-xs">
+                    <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ttdFile?.name}</p>
+                    <p style={{ color: 'var(--text-muted)' }}>{(ttdFile?.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-between">
             <button onClick={handleBack} className="btn-ghost flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" /> Kembali
@@ -330,6 +395,19 @@ export default function FormPengajuan() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {Boolean(selectedCat?.ttd_digital) && (
+              <div>
+                <p className="section-title mb-2">TTD Digital Mahasiswa</p>
+                <div className="rounded-xl p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  {ttdPreview ? (
+                    <img src={ttdPreview} alt="Preview TTD" className="h-14 object-contain border bg-white p-1 rounded-lg" />
+                  ) : (
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ttdFile?.name || 'Ter-upload'}</span>
+                  )}
                 </div>
               </div>
             )}

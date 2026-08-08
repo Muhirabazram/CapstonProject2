@@ -12,7 +12,7 @@ export default function KelolaKategori() {
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [editCat, setEditCat] = useState(null)
-  const [form, setForm] = useState({ nama_kategori: '', deskripsi: '', requirements: [], variables: [], file_template: null })
+  const [form, setForm] = useState({ nama_kategori: '', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template: null })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [deleteId, setDeleteId] = useState(null)
@@ -23,13 +23,14 @@ export default function KelolaKategori() {
   }
   useEffect(() => { fetchCategories() }, [])
 
-  const resetForm = () => setForm({ nama_kategori: '', deskripsi: '', requirements: [], variables: [], file_template: null })
+  const resetForm = () => setForm({ nama_kategori: '', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template: null })
 
   const openAdd = () => { resetForm(); setEditCat(null); setFormError(''); setShowAdd(true) }
   const openEdit = (cat) => {
     setForm({
       nama_kategori: cat.nama_kategori,
       deskripsi: cat.deskripsi || '',
+      ttd_digital: !!cat.ttd_digital,
       requirements: (cat.requirements || []).map((r) => ({ nama_syarat: r.nama_syarat, tipe_file: r.tipe_file })),
       variables: (cat.variables || []).map((v) => ({ nama_variabel: v.nama_variabel, tipe_input_html: v.tipe_input_html })),
       file_template: null,
@@ -54,6 +55,7 @@ export default function KelolaKategori() {
     const fd = new FormData()
     fd.append('nama_kategori', form.nama_kategori)
     fd.append('deskripsi', form.deskripsi || '')
+    fd.append('ttd_digital', form.ttd_digital ? '1' : '0')
     if (form.file_template) fd.append('file_template', form.file_template)
     form.requirements.forEach((r, i) => {
       fd.append(`requirements[${i}][nama_syarat]`, r.nama_syarat)
@@ -152,14 +154,21 @@ export default function KelolaKategori() {
                       </div>
                     </td>
                     <td className="px-6 py-3">
-                      {cat.file_template_path ? (
-                        <span className="badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                          <Check className="w-3 h-3 mr-1" />
-                          Tersedia
-                        </span>
-                      ) : (
-                        <span className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-muted)' }}>Belum ada</span>
-                      )}
+                      <div className="flex flex-col gap-1 items-start">
+                        {cat.file_template_path ? (
+                          <span className="badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                            <Check className="w-3 h-3 mr-1" />
+                            Tersedia
+                          </span>
+                        ) : (
+                          <span className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-muted)' }}>Belum ada</span>
+                        )}
+                        {cat.ttd_digital && (
+                          <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-[10px]">
+                            + TTD Digital
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex gap-1">
@@ -215,12 +224,29 @@ export default function KelolaKategori() {
 
           {/* Template */}
           <div className="space-y-3">
-            <h4 className="section-title">Template Surat</h4>
+            <h4 className="section-title">Template Surat & Pengaturan</h4>
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                 Upload Template (.docx) <span className="font-normal" style={{ color: 'var(--text-muted)' }}>Maks. 20MB</span>
               </label>
               <input type="file" accept=".docx" onChange={(e) => setForm({ ...form, file_template: e.target.files[0] })} className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer" />
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.ttd_digital}
+                  onChange={(e) => setForm({ ...form, ttd_digital: e.target.checked })}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 dark:border-gray-700"
+                />
+                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Memerlukan TTD Digital Mahasiswa
+                </span>
+              </label>
+              <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-muted)' }}>
+                Jika diaktifkan, mahasiswa wajib mengunggah file TTD digital (PNG/JPG) saat mengajukan surat ini.
+              </p>
             </div>
           </div>
 

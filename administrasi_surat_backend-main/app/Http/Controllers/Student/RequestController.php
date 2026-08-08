@@ -29,6 +29,7 @@ class RequestController extends Controller
 
         $request->validate([
             'category_id' => 'required|exists:letter_categories,id',
+            'file_ttd_digital' => 'nullable|file|mimes:png,jpg,jpeg|max:5120',
             'values' => 'nullable|array',
             'values.*.variable_id' => 'required|exists:letter_variables,id',
             'values.*.nilai_isian' => 'required|string',
@@ -38,11 +39,19 @@ class RequestController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $mahasiswa) {
+            $sigPath = null;
+            if ($request->hasFile('file_ttd_digital')) {
+                $sigFile = $request->file('file_ttd_digital');
+                $filename = time() . '_ttd_' . $mahasiswa->id . '.' . $sigFile->getClientOriginalExtension();
+                $sigPath = $sigFile->storeAs('signatures', $filename, 'public');
+            }
+
             $letterRequest = LetterRequest::create([
                 'mahasiswa_id' => $mahasiswa->id,
                 'category_id' => $request->category_id,
                 'status' => 'diajukan',
                 'tanggal_pengajuan' => now()->toDateString(),
+                'file_ttd_digital_path' => $sigPath,
             ]);
 
             if ($request->has('values')) {
@@ -109,5 +118,49 @@ class RequestController extends Controller
             'status' => 'success',
             'data' => $requests,
         ]);
+    }
+
+    /**
+     * Download completed letter for student
+     */
+    public function downloadLetter(Request $request, $id)
+    {
+        $user = $request->user();
+        $mahasiswa = $user->mahasiswa;
+
+        if (!$mahasiswa) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Profil mahasiswa tidak ditemukan.',
+            ], 403);
+        }
+
+        $letterRequest = LetterRequest::with(['category', 'mahasiswa', 'values.variable'])
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->findOrFail($id);
+
+        if ($letterRequest->status !== 'selesai') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Surat belum selesai diproses oleh admin.',
+            ], 400);
+        }
+
+        // If file_hasil_path is missing, generate on demand
+        if (!$letterRequest->file_hasil_path || !Storage::disk('public')->exists($letterRequest->file_hasil_path)) {
+            $generated = \App\Services\DocumentGeneratorService::generate($letterRequest);
+            if ($generated) {
+                $letterRequest->file_hasil_path = $generated;
+                $letterRequest->save();
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'File surat tidak ditemukan atau template belum disiapkan admin.',
+                ], 404);
+            }
+        }
+
+        $fullPath = Storage::disk('public')->path($letterRequest->file_hasil_path);
+        return response()->download($fullPath);
     }
 }

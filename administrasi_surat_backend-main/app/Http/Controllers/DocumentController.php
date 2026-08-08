@@ -38,10 +38,16 @@ class DocumentController extends Controller
         $letterRequest = LetterRequest::with('category')->findOrFail($id);
 
         if (!$letterRequest->file_hasil_path || !Storage::disk('public')->exists($letterRequest->file_hasil_path)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Dokumen hasil belum tersedia atau file tidak ditemukan.',
-            ], 404);
+            $generated = \App\Services\DocumentGeneratorService::generate($letterRequest);
+            if ($generated) {
+                $letterRequest->file_hasil_path = $generated;
+                $letterRequest->save();
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Dokumen hasil belum tersedia atau file tidak ditemukan.',
+                ], 404);
+            }
         }
 
         $fullPath = Storage::disk('public')->path($letterRequest->file_hasil_path);

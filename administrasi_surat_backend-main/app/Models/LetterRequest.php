@@ -15,6 +15,7 @@ class LetterRequest extends Model
         'status',
         'tanggal_pengajuan',
         'file_hasil_path',
+        'file_ttd_digital_path',
     ];
 
     public function mahasiswa()
