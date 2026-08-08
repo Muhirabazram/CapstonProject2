@@ -51,7 +51,7 @@ export default function KelolaPengajuan() {
   }
 
   const handleDownloadReqDoc = (id, filename) => {
-    api.get(`/admin/requests/requirements/${id}/download`, { responseType: 'blob' }).then((res) => {
+    api.get(`/documents/requirement/${id}`, { responseType: 'blob' }).then((res) => {
       const url = window.URL.createObjectURL(new Blob([res.data]))
       const a = document.createElement('a')
       a.href = url
@@ -59,6 +59,18 @@ export default function KelolaPengajuan() {
       a.click()
       window.URL.revokeObjectURL(url)
     }).catch(() => toast.error('Gagal mengunduh dokumen'))
+  }
+
+  const handlePreviewReqDoc = async (id) => {
+    try {
+      const response = await api.get(`/documents/requirement/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const url = URL.createObjectURL(response.data)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch {
+      toast.error('Gagal mempreview dokumen.')
+    }
   }
 
   const handleUpdateStatus = async () => {
@@ -255,13 +267,22 @@ export default function KelolaPengajuan() {
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{rr.file_path?.split('/').pop()}</span>
                       </div>
                       {rr.file_path && (
-                        <button
-                          onClick={() => handleDownloadReqDoc(rr.id, rr.file_path.split('/').pop())}
-                          className="btn-ghost btn-sm flex items-center gap-1 text-primary"
-                        >
-                          <Download className="w-3 h-3" />
-                          Unduh
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handlePreviewReqDoc(rr.id)}
+                            className="btn-ghost btn-sm flex items-center gap-1 text-primary"
+                            title="Lihat"
+                          >
+                            <Eye className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadReqDoc(rr.id, rr.file_path.split('/').pop())}
+                            className="btn-ghost btn-sm flex items-center gap-1 text-primary"
+                            title="Unduh"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -304,9 +325,20 @@ export default function KelolaPengajuan() {
             {selected.file_hasil_path && (
               <div className="space-y-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                 <h4 className="section-title">Surat Resmi</h4>
-                <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-sm text-emerald-700 dark:text-emerald-300">{selected.file_hasil_path.split('/').pop()}</span>
+                <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300">{selected.file_hasil_path.split('/').pop()}</span>
+                  </div>
+                  <a
+                    href={`/storage/${selected.file_hasil_path}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-ghost btn-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Lihat
+                  </a>
                 </div>
               </div>
             )}
@@ -332,8 +364,8 @@ export default function KelolaPengajuan() {
                 className="select-base"
               >
                 <option value="diajukan">Diajukan</option>
-                <option value="diterima">Diterima</option>
                 <option value="diproses">Diproses</option>
+                <option value="diterima">Diterima</option>
                 <option value="selesai">Selesai</option>
                 <option value="ditolak">Ditolak</option>
               </select>

@@ -5,8 +5,7 @@ import StatusBadge from '../../components/StatusBadge'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonCard, SkeletonTable } from '../../components/Skeleton'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../context/ToastContext'
-import { Send, Clock, CheckCircle, FileText, ArrowRight } from 'lucide-react'
+import { Send, Clock, CheckCircle, FileText, ArrowRight, AlertCircle, Edit3, Download } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -32,13 +31,38 @@ export default function MahasiswaDashboard() {
   }
 
   const name = user?.mahasiswa?.nama || user?.username || 'Mahasiswa'
+  const nim = user?.mahasiswa?.nim || ''
+
+  const latestRejected = requests.find((r) => r.status === 'ditolak')
+  const latestSelesai = requests.find((r) => r.status === 'selesai' && r.file_hasil_path)
+
+  const handleDownloadResult = async (id) => {
+    try {
+      const response = await api.get(`/documents/download/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const cd = response.headers['content-disposition']
+      let filename = `Surat_${id}.docx`
+      if (cd) {
+        const match = cd.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i)
+        if (match) filename = decodeURIComponent(match[1].replace(/"/g, ''))
+      }
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {}
+  }
 
   return (
     <div className="space-y-6">
       {/* Greeting */}
       <div>
         <h2 className="page-title">Selamat datang, {name}</h2>
-        <p className="page-description mt-1">Pantau status pengajuan surat Anda di sini.</p>
+        <p className="page-description mt-1">{nim && `${nim} · `}Pantau status pengajuan surat Anda di sini.</p>
       </div>
 
       {/* Quick Action */}
@@ -99,6 +123,49 @@ export default function MahasiswaDashboard() {
         </div>
       )}
 
+      {/* Rejection Alert */}
+      {latestRejected && (
+        <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-red-800 dark:text-red-200">Pengajuan Ditolak</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">#{String(latestRejected.id).padStart(3, '0')} · {latestRejected.category?.nama_kategori || '-'}</p>
+              {latestRejected.alasan_penolakan && (
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1.5">"{latestRejected.alasan_penolakan}"</p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/mahasiswa/pengajuan', { state: { reapplyReq: latestRejected } })}
+            className="btn-sm bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 mt-1"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            Ajukan Ulang
+          </button>
+        </div>
+      )}
+
+      {/* Completed Letter Alert */}
+      {latestSelesai && (
+        <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div>
+              <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Surat Resmi Tersedia</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">#{String(latestSelesai.id).padStart(3, '0')} · {latestSelesai.category?.nama_kategori || '-'}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleDownloadResult(latestSelesai.id)}
+            className="btn-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download
+          </button>
+        </div>
+      )}
+
       {/* Recent Requests */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -127,7 +194,11 @@ export default function MahasiswaDashboard() {
                 <tr><td colSpan={4}><EmptyState message="Belum ada pengajuan" icon={FileText} /></td></tr>
               ) : (
                 requests.slice(0, 5).map((req) => (
-                  <tr key={req.id} className="table-row">
+                  <tr
+                    key={req.id}
+                    className="table-row cursor-pointer"
+                    onClick={() => navigate('/mahasiswa/riwayat')}
+                  >
                     <td className="px-6 py-3 font-mono text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                       #REQ-{String(req.id).padStart(3, '0')}
                     </td>

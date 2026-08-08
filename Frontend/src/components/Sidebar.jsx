@@ -76,6 +76,9 @@ export default function Sidebar({ role, open, onClose }) {
             <div className="flex-1 min-w-0">
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Selamat datang,</p>
               <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }} title={name}>{name}</p>
+              {user?.mahasiswa?.nim && (
+                <p className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>{user.mahasiswa.nim}</p>
+              )}
               <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-200">
                 {role === 'admin' ? 'Administrator' : 'Mahasiswa'}
               </span>
