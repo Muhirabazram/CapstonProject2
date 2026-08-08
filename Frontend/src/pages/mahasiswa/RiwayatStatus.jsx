@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import StatusTimeline from '../../components/StatusTimeline'
 import EmptyState from '../../components/EmptyState'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Download, FileText, Clock, Eye } from 'lucide-react'
+import { Download, FileText, Clock, Eye, AlertCircle, Edit3 } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -15,6 +16,7 @@ function formatDate(d) {
 }
 
 export default function RiwayatStatus() {
+  const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
@@ -225,6 +227,29 @@ export default function RiwayatStatus() {
                       <Eye className="w-3 h-3" />
                     </a>
                   </div>
+                </div>
+              )}
+
+              {/* Alasan Penolakan if rejected */}
+              {selected.status === 'ditolak' && (
+                <div className="space-y-3" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-1">
+                    <p className="text-xs font-semibold text-red-800 dark:text-red-200 flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      Alasan Penolakan Dari Admin:
+                    </p>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300 mt-1">
+                      {selected.alasan_penolakan || 'Pengajuan ditolak oleh admin (tidak ada keterangan tambahan).'}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/mahasiswa/pengajuan', { state: { reapplyReq: selected } })}
+                    className="btn-primary w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Ajukan Ulang / Perbaiki Form
+                  </button>
                 </div>
               )}
 

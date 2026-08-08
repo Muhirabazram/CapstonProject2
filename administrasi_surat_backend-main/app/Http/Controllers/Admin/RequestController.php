@@ -39,6 +39,7 @@ class RequestController extends Controller
         $request->validate([
             'status' => 'required|in:diajukan,diterima,diproses,ditolak,selesai',
             'file_surat' => 'nullable|file|mimes:docx,doc,pdf|max:20480',
+            'alasan_penolakan' => 'nullable|string|max:1000',
         ]);
 
         $letterRequest = LetterRequest::with([
@@ -46,6 +47,10 @@ class RequestController extends Controller
             'category',
             'values.variable',
         ])->findOrFail($id);
+
+        if ($request->has('alasan_penolakan')) {
+            $letterRequest->alasan_penolakan = $request->alasan_penolakan;
+        }
 
         if ($request->status === 'selesai') {
             $filePath = $letterRequest->file_hasil_path;

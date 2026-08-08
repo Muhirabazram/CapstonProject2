@@ -30,20 +30,25 @@ class RequestController extends Controller
         $request->validate([
             'category_id' => 'required|exists:letter_categories,id',
             'file_ttd_digital' => 'nullable|file|mimes:png,jpg,jpeg|max:5120',
+            'reapply_req_id' => 'nullable|exists:letter_requests,id',
             'values' => 'nullable|array',
             'values.*.variable_id' => 'required|exists:letter_variables,id',
             'values.*.nilai_isian' => 'required|string',
             'requirements' => 'nullable|array',
             'requirements.*.requirement_id' => 'required|exists:letter_requirements,id',
-            'requirements.*.file' => 'required|file|max:10240',
+            'requirements.*.file' => 'nullable|file|max:10240',
         ]);
 
         return DB::transaction(function () use ($request, $mahasiswa) {
             $sigPath = null;
+            $oldReq = $request->reapply_req_id ? LetterRequest::find($request->reapply_req_id) : null;
+
             if ($request->hasFile('file_ttd_digital')) {
                 $sigFile = $request->file('file_ttd_digital');
                 $filename = time() . '_ttd_' . $mahasiswa->id . '.' . $sigFile->getClientOriginalExtension();
                 $sigPath = $sigFile->storeAs('signatures', $filename, 'public');
+            } elseif ($oldReq && $oldReq->file_ttd_digital_path) {
+                $sigPath = $oldReq->file_ttd_digital_path;
             }
 
             $letterRequest = LetterRequest::create([
@@ -64,19 +69,36 @@ class RequestController extends Controller
                 }
             }
 
-            $reqFiles = $request->file('requirements');
-            if ($reqFiles) {
-                foreach ($reqFiles as $idx => $reqItem) {
-                    $reqId = $request->requirements[$idx]['requirement_id'] ?? null;
-                    $file = $reqItem['file'] ?? null;
-                    if ($reqId && $file && $file->isValid()) {
-                        $filename = time() . '_req_' . $reqId . '_' . $file->getClientOriginalName();
-                        $filePath = $file->storeAs('requirements_uploads', $filename, 'public');
-
+            // Process uploaded requirements or copy from old request
+            $uploadedReqIds = [];
+            if ($request->has('requirements')) {
+                foreach ($request->requirements as $req) {
+                    $reqId = $req['requirement_id'];
+                    $filePath = null;
+                    if (isset($req['file']) && $req['file'] instanceof \Illuminate\Http\UploadedFile) {
+                        $f = $req['file'];
+                        $fn = time() . '_req_' . $reqId . '_' . $f->getClientOriginalName();
+                        $filePath = $f->storeAs('requirements_uploads', $fn, 'public');
+                    }
+                    if ($filePath) {
+                        $uploadedReqIds[] = $reqId;
                         LetterRequestRequirement::create([
                             'request_id' => $letterRequest->id,
                             'requirement_id' => $reqId,
                             'file_path' => $filePath,
+                        ]);
+                    }
+                }
+            }
+
+            // Copy remaining requirements from old request if re-applying
+            if ($oldReq) {
+                foreach ($oldReq->requestRequirements as $oldRequirement) {
+                    if (!in_array($oldRequirement->requirement_id, $uploadedReqIds, true) && $oldRequirement->file_path) {
+                        LetterRequestRequirement::create([
+                            'request_id' => $letterRequest->id,
+                            'requirement_id' => $oldRequirement->requirement_id,
+                            'file_path' => $oldRequirement->file_path,
                         ]);
                     }
                 }

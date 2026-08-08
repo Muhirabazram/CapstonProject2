@@ -22,6 +22,7 @@ export default function KelolaPengajuan() {
   const [selected, setSelected] = useState(null)
   const [newStatus, setNewStatus] = useState('')
   const [fileSurat, setFileSurat] = useState(null)
+  const [alasanPenolakan, setAlasanPenolakan] = useState('')
   const [saving, setSaving] = useState(false)
   const [detailError, setDetailError] = useState('')
   const [search, setSearch] = useState('')
@@ -43,30 +44,30 @@ export default function KelolaPengajuan() {
   const openDetail = (req) => {
     setSelected(req)
     setNewStatus(req.status)
+    setAlasanPenolakan(req.alasan_penolakan || '')
     setFileSurat(null)
     setDetailError('')
     setShowDetail(true)
   }
 
-  const handleDownloadReqDoc = async (rrId, name) => {
-    try {
-      const response = await api.get(`/documents/requirement/${rrId}`, { responseType: 'blob' })
-      const url = URL.createObjectURL(response.data)
+  const handleDownloadReqDoc = (id, filename) => {
+    api.get(`/admin/requests/requirements/${id}/download`, { responseType: 'blob' }).then((res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]))
       const a = document.createElement('a')
       a.href = url
-      a.download = name
-      document.body.appendChild(a)
+      a.download = filename || 'dokumen_prasyarat'
       a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch {
-      toast.error('Gagal mengunduh dokumen')
-    }
+      window.URL.revokeObjectURL(url)
+    }).catch(() => toast.error('Gagal mengunduh dokumen'))
   }
 
   const handleUpdateStatus = async () => {
     if (!selected || !newStatus) return
     if ((newStatus === 'selesai' || newStatus === 'ditolak') && newStatus !== selected.status) {
+      if (newStatus === 'ditolak' && !alasanPenolakan.trim()) {
+        setDetailError('Harap tuliskan alasan penolakan pengajuan.')
+        return
+      }
       setShowConfirm(true)
       return
     }
@@ -78,6 +79,12 @@ export default function KelolaPengajuan() {
     setSaving(true)
     setDetailError('')
     try {
+      if (newStatus === 'ditolak' && !alasanPenolakan.trim()) {
+        setDetailError('Harap tuliskan alasan penolakan pengajuan.')
+        setSaving(false)
+        return
+      }
+
       if (newStatus === 'selesai' && fileSurat) {
         const fd = new FormData()
         fd.append('status', 'selesai')
@@ -88,7 +95,9 @@ export default function KelolaPengajuan() {
         fetchRequests()
         toast.success(res.data?.message || 'Status berhasil diperbarui')
       } else {
-        const res = await api.patch(`/admin/requests/${selected.id}/status`, { status: newStatus })
+        const payload = { status: newStatus }
+        if (newStatus === 'ditolak') payload.alasan_penolakan = alasanPenolakan
+        const res = await api.patch(`/admin/requests/${selected.id}/status`, payload)
         setShowDetail(false)
         setSelected(null)
         fetchRequests()
@@ -302,6 +311,13 @@ export default function KelolaPengajuan() {
               </div>
             )}
 
+            {selected.alasan_penolakan && selected.status === 'ditolak' && (
+              <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-1">
+                <p className="text-xs font-semibold text-red-800 dark:text-red-200">Alasan Penolakan Terdaftar:</p>
+                <p className="text-sm text-red-700 dark:text-red-300">{selected.alasan_penolakan}</p>
+              </div>
+            )}
+
             {/* Status Update */}
             <div className="space-y-3" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
               <h4 className="section-title">Update Status</h4>
@@ -340,6 +356,22 @@ export default function KelolaPengajuan() {
                     File manual dipilih: {fileSurat.name} ({(fileSurat.size / 1024 / 1024).toFixed(2)} MB)
                   </p>
                 )}
+              </div>
+            )}
+
+            {newStatus === 'ditolak' && (
+              <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
+                <label className="block text-sm font-medium text-red-800 dark:text-red-200">
+                  Alasan Penolakan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={alasanPenolakan}
+                  onChange={(e) => { setAlasanPenolakan(e.target.value); setDetailError('') }}
+                  rows={3}
+                  className="input-base border-red-300 dark:border-red-700 focus:ring-red-200"
+                  placeholder="Masukkan alasan mengapa pengajuan surat ini ditolak..."
+                  required
+                />
               </div>
             )}
 
