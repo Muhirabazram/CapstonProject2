@@ -31,7 +31,7 @@ export default function Modal({ open, onClose, title, children, wide }) {
       ref={overlayRef}
       onClick={handleOverlayClick}
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
-      style={{ backgroundColor: 'var(--overlay)' }}
+      style={{ backgroundColor: 'var(--overlay)', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
       role="dialog"
       aria-modal="true"
       aria-label={title}
