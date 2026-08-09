@@ -1,5 +1,6 @@
 import { AlertCircle, Download, FileText, Info, Loader2, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../api/axios'
 
 /**
@@ -138,8 +139,12 @@ export default function DocumentPreviewModal({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
 
         {/* Header */}
@@ -242,6 +247,7 @@ export default function DocumentPreviewModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
