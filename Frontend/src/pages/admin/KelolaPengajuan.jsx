@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
 import Modal from '../../components/Modal'
+import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import StatusBadge from '../../components/StatusBadge'
 import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -28,6 +29,8 @@ export default function KelolaPengajuan() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
+
   const toast = useToast()
 
   const fetchRequests = () => {
@@ -72,6 +75,47 @@ export default function KelolaPengajuan() {
       toast.error('Gagal mempreview dokumen.')
     }
   }
+
+  const handleDownloadResult = async (id, customFilename = '') => {
+    try {
+      const response = await api.get(`/documents/download/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const cd = response.headers['content-disposition']
+      let filename = customFilename || `Surat_${id}.docx`
+      if (!customFilename && cd) {
+        const match = cd.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i)
+        if (match) filename = decodeURIComponent(match[1].replace(/"/g, ''))
+      }
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Gagal mengunduh surat resmi')
+    }
+  }
+
+  const handlePreviewResult = async (req) => {
+    try {
+      const response = await api.get(`/documents/download/${req.id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Resmi_${req.id}.docx`
+      setPreviewModal({
+        open: true,
+        blob: response.data,
+        filename,
+        title: `Surat Resmi - ${req.user?.name || req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id
+      })
+    } catch {
+      toast.error('Gagal memuat preview surat resmi.')
+    }
+  }
+
 
   const handleUpdateStatus = async () => {
     if (!selected || !newStatus) return
@@ -328,17 +372,26 @@ export default function KelolaPengajuan() {
                 <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-sm text-emerald-700 dark:text-emerald-300">{selected.file_hasil_path.split('/').pop()}</span>
+                    <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{selected.file_hasil_path.split('/').pop()}</span>
                   </div>
-                  <a
-                    href={`/storage/${selected.file_hasil_path}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-ghost btn-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-1"
-                  >
-                    <Eye className="w-3 h-3" />
-                    Lihat
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handlePreviewResult(selected)}
+                      className="btn-ghost btn-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 flex items-center gap-1"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadResult(selected.id, selected.file_hasil_path.split('/').pop())}
+                      className="btn-ghost btn-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 flex items-center gap-1"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Unduh
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -435,6 +488,18 @@ export default function KelolaPengajuan() {
         confirmLabel={newStatus === 'selesai' ? 'Selesaikan' : 'Tolak'}
         loading={saving}
       />
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal({ ...previewModal, open: false })}
+        title={previewModal.title}
+        reqId={previewModal.reqId}
+        fileBlob={previewModal.blob}
+        filename={previewModal.filename}
+        onDownload={() => handleDownloadResult(previewModal.reqId, previewModal.filename)}
+      />
     </div>
   )
 }
+

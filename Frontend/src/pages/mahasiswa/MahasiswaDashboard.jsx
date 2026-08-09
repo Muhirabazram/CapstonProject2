@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import EmptyState from '../../components/EmptyState'
+import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import { SkeletonCard, SkeletonTable } from '../../components/Skeleton'
 import { useAuth } from '../../context/AuthContext'
-import { Send, Clock, CheckCircle, FileText, ArrowRight, AlertCircle, Edit3, Download } from 'lucide-react'
+import { Send, Clock, CheckCircle, FileText, ArrowRight, AlertCircle, Edit3, Download, Eye } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -17,6 +18,7 @@ function formatDate(d) {
 export default function MahasiswaDashboard() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -35,6 +37,22 @@ export default function MahasiswaDashboard() {
 
   const latestRejected = requests.find((r) => r.status === 'ditolak')
   const latestSelesai = requests.find((r) => r.status === 'selesai' && r.file_hasil_path)
+
+  const handlePreviewResult = async (req) => {
+    try {
+      const response = await api.get(`/documents/download/${req.id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Resmi_${req.id}.docx`
+      setPreviewModal({
+        open: true,
+        blob: response.data,
+        filename,
+        title: `Surat Resmi - ${req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id
+      })
+    } catch {}
+  }
+
 
   const handleDownloadResult = async (id) => {
     try {
@@ -148,21 +166,30 @@ export default function MahasiswaDashboard() {
 
       {/* Completed Letter Alert */}
       {latestSelesai && (
-        <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+        <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Surat Resmi Tersedia</p>
               <p className="text-xs text-emerald-700 dark:text-emerald-300">#{String(latestSelesai.id).padStart(3, '0')} · {latestSelesai.category?.nama_kategori || '-'}</p>
             </div>
           </div>
-          <button
-            onClick={() => handleDownloadResult(latestSelesai.id)}
-            className="btn-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Download
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePreviewResult(latestSelesai)}
+              className="btn-sm bg-emerald-100 dark:bg-emerald-800/40 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5 font-medium"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Preview
+            </button>
+            <button
+              onClick={() => handleDownloadResult(latestSelesai.id)}
+              className="btn-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 font-medium"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Unduh
+            </button>
+          </div>
         </div>
       )}
 
@@ -212,6 +239,17 @@ export default function MahasiswaDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal({ ...previewModal, open: false })}
+        title={previewModal.title}
+        reqId={previewModal.reqId}
+        fileBlob={previewModal.blob}
+        filename={previewModal.filename}
+        onDownload={() => handleDownloadResult(previewModal.reqId)}
+      />
     </div>
   )
 }

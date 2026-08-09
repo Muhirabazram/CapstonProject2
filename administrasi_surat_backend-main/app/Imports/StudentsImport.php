@@ -18,17 +18,21 @@ class StudentsImport implements ToCollection, WithHeadingRow
             $nim = $row['nim'] ?? $row['username'] ?? null;
             $nama = $row['nama'] ?? $row['nama_lengkap'] ?? null;
             $prodi = $row['prodi'] ?? $row['program_studi'] ?? 'Informatika';
-            $password = $row['password'] ?? $nim ?? '12345678';
 
             if (!$nim || !$nama) {
                 continue;
             }
 
+            $cleanNim = trim((string) $nim);
+            $defaultUsnPw = 'stmik' . $cleanNim;
+            $customPassword = $row['password'] ?? null;
+            $passwordHash = $customPassword ? Hash::make((string) $customPassword) : Hash::make($defaultUsnPw);
+
             // Create or Update User account
             $user = User::updateOrCreate(
-                ['username' => (string) $nim],
+                ['username' => $defaultUsnPw],
                 [
-                    'password' => Hash::make((string) $password),
+                    'password' => $passwordHash,
                     'role' => 'mahasiswa',
                 ]
             );
@@ -37,7 +41,7 @@ class StudentsImport implements ToCollection, WithHeadingRow
             Mahasiswa::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'nim' => (string) $nim,
+                    'nim' => $cleanNim,
                     'nama' => (string) $nama,
                     'prodi' => (string) $prodi,
                 ]

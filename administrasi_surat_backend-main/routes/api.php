@@ -20,9 +20,10 @@ Route::post('/login', [AuthController::class, 'login']);
 // Authenticated Routes (Requires Bearer Token via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
 
-    // User Profile & Logout
+    // User Profile, Password & Logout
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/user/change-password', [AuthController::class, 'changePassword']);
 
     // Admin Routes
     Route::prefix('admin')->group(function () {
@@ -30,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/students', [AdminStudentController::class, 'index']);
         Route::post('/students', [AdminStudentController::class, 'store']);
         Route::put('/students/{id}', [AdminStudentController::class, 'update']);
+        Route::post('/students/{id}/reset-password', [AdminStudentController::class, 'resetPassword']);
         Route::delete('/students/{id}', [AdminStudentController::class, 'destroy']);
         Route::post('/students/import', [AdminStudentController::class, 'import']);
 

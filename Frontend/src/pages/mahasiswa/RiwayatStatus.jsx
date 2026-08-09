@@ -4,6 +4,7 @@ import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import StatusTimeline from '../../components/StatusTimeline'
 import EmptyState from '../../components/EmptyState'
+import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
 import { Download, FileText, Clock, Eye, AlertCircle, Edit3 } from 'lucide-react'
@@ -20,11 +21,30 @@ export default function RiwayatStatus() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
+  const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
   const toast = useToast()
 
   useEffect(() => {
     api.get('/student/requests/history').then((r) => setRequests(r.data.data)).catch(() => {}).finally(() => setLoading(false))
   }, [])
+
+  const handlePreviewResult = async (req) => {
+    try {
+      const response = await api.get(`/documents/download/${req.id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Resmi_${req.id}.docx`
+      setPreviewModal({
+        open: true,
+        blob: response.data,
+        filename,
+        title: `Surat Resmi - ${req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id
+      })
+    } catch {
+      toast.error('Gagal memuat preview surat resmi.')
+    }
+  }
+
 
   const handleDownloadResult = async (id) => {
     try {
@@ -253,15 +273,24 @@ export default function RiwayatStatus() {
                 </div>
               )}
 
-              {/* Download Result */}
+              {/* Download Result & Preview */}
               {selected.status === 'selesai' && (
-                <button
-                  onClick={() => handleDownloadResult(selected.id)}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Surat Resmi (.docx)
-                </button>
+                <div className="space-y-2 pt-2">
+                  <button
+                    onClick={() => handlePreviewResult(selected)}
+                    className="btn-secondary w-full flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview Surat Resmi
+                  </button>
+                  <button
+                    onClick={() => handleDownloadResult(selected.id)}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Surat Resmi (.docx)
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -272,6 +301,18 @@ export default function RiwayatStatus() {
           )}
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal({ ...previewModal, open: false })}
+        title={previewModal.title}
+        reqId={previewModal.reqId}
+        fileBlob={previewModal.blob}
+        filename={previewModal.filename}
+        onDownload={() => handleDownloadResult(previewModal.reqId)}
+      />
     </div>
   )
 }
+

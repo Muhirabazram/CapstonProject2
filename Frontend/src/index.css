@@ -185,3 +185,62 @@
     text-wrap: balance;
   }
 }
+
+/* docx-preview custom styles for high-fidelity rendering */
+.docx-wrapper {
+  background: #cbd5e1 !important;
+  padding: 2rem 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  min-height: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.dark .docx-wrapper {
+  background: #0f172a !important;
+}
+
+.docx-wrapper > section {
+  background: #ffffff !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 2rem !important;
+  color: #0f172a !important;
+  border-radius: 2px !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+/* Ensure text inside docx stays readable dark color in dark mode */
+.docx-wrapper p,
+.docx-wrapper span,
+.docx-wrapper td,
+.docx-wrapper th,
+.docx-wrapper h1,
+.docx-wrapper h2,
+.docx-wrapper h3,
+.docx-wrapper h4,
+.docx-wrapper div,
+.docx-wrapper li {
+  color: #0f172a !important;
+}
+
+/* Image containment */
+.docx-wrapper img,
+.docx-wrapper picture {
+  max-width: 100% !important;
+  height: auto !important;
+  display: inline-block !important;
+}
+
+/* Table layout natural wrap */
+.docx-wrapper table {
+  max-width: 100% !important;
+}
+
+.docx-wrapper table td {
+  vertical-align: top !important;
+  padding: 2px 4px !important;
+}
+

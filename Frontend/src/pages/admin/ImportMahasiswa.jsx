@@ -5,7 +5,7 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import Modal from '../../components/Modal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Upload, FileSpreadsheet, CheckCircle, Users, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Upload, FileSpreadsheet, CheckCircle, Users, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Key, RotateCcw } from 'lucide-react'
 
 const emptyForm = { nim: '', nama: '', prodi: '' }
 const PER_PAGE = 10
@@ -21,6 +21,7 @@ export default function ImportMahasiswa() {
   const [editId, setEditId] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmReset, setConfirmReset] = useState(null)
   const fileRef = useRef()
   const toast = useToast()
 
@@ -81,7 +82,7 @@ export default function ImportMahasiswa() {
         toast.success('Data mahasiswa berhasil diperbarui!')
       } else {
         await api.post('/admin/students', form)
-        toast.success('Mahasiswa berhasil ditambahkan!')
+        toast.success(`Mahasiswa berhasil ditambahkan! Default USN/PW: stmik${form.nim}`)
       }
       setShowModal(false)
       fetchStudents()
@@ -102,6 +103,18 @@ export default function ImportMahasiswa() {
     }
   }
 
+  const handleResetPassword = async () => {
+    if (!confirmReset) return
+    try {
+      await api.post(`/admin/students/${confirmReset.id}/reset-password`)
+      toast.success(`Password ${confirmReset.nama} berhasil di-reset ke stmik${confirmReset.nim}!`)
+      setConfirmReset(null)
+      fetchStudents()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal mereset password.')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -113,6 +126,17 @@ export default function ImportMahasiswa() {
           <Plus className="w-4 h-4" />
           Tambah
         </button>
+      </div>
+
+      {/* Account Info Notice Banner */}
+      <div className="card p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 flex items-start gap-3">
+        <Key className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300">Informasi Akun Default Mahasiswa</h4>
+          <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+            Username dan Password akun mahasiswa secara default diset ke <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 font-mono font-bold text-amber-900 dark:text-amber-200">stmik[NIM]</code> (Contoh: NIM <span className="font-bold">1224008</span> → Username: <code className="font-bold">stmik1224008</code> & Password: <code className="font-bold">stmik1224008</code>).
+          </p>
+        </div>
       </div>
 
       {/* Drag & Drop Import */}
@@ -145,7 +169,7 @@ export default function ImportMahasiswa() {
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {dragging ? 'Lepaskan file di sini' : 'Klik atau seret file Excel ke sini'}
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>.xlsx, .xls, atau .csv &middot; Otomatis di-import</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>.xlsx, .xls, atau .csv &middot; Otomatis di-import dengan default USN & PW: stmik[NIM]</p>
             </div>
           </div>
         )}
@@ -179,22 +203,33 @@ export default function ImportMahasiswa() {
                 <th className="table-header text-left px-6 py-3">NIM</th>
                 <th className="table-header text-left px-6 py-3">Nama Lengkap</th>
                 <th className="table-header text-left px-6 py-3 hidden sm:table-cell">Program Studi</th>
+                <th className="table-header text-left px-6 py-3 hidden md:table-cell">Akun Default</th>
                 <th className="table-header text-right px-6 py-3">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="px-6 py-12"><SkeletonTable rows={5} cols={4} /></td></tr>
+                <tr><td colSpan={5} className="px-6 py-12"><SkeletonTable rows={5} cols={5} /></td></tr>
               ) : paged.length === 0 ? (
-                <tr><td colSpan={4}><EmptyState message={search ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
+                <tr><td colSpan={5}><EmptyState message={search ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
               ) : (
                 paged.map((s) => (
                   <tr key={s.id} className="table-row">
                     <td className="px-6 py-3 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.nim}</td>
                     <td className="px-6 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>{s.nama}</td>
                     <td className="px-6 py-3 hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>{s.prodi}</td>
+                    <td className="px-6 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                      stmik{s.nim}
+                    </td>
                     <td className="px-6 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setConfirmReset(s)}
+                          className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                          title="Reset Password ke Default (stmik[NIM])"
+                        >
+                          <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </button>
                         <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-navy-100 dark:hover:bg-navy-800 transition-colors" title="Edit">
                           <Pencil className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                         </button>
@@ -258,6 +293,11 @@ export default function ImportMahasiswa() {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>NIM</label>
             <input type="text" required value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} className="input-base w-full" placeholder="Masukkan NIM" />
+            {!editId && form.nim && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
+                Default Username & Password: <code className="font-mono font-bold">stmik{form.nim}</code>
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Lengkap</label>
@@ -273,6 +313,16 @@ export default function ImportMahasiswa() {
           </div>
         </form>
       </Modal>
+
+      {/* Reset Password Confirmation */}
+      <ConfirmDialog
+        open={!!confirmReset}
+        onClose={() => setConfirmReset(null)}
+        onConfirm={handleResetPassword}
+        title="Reset Password Mahasiswa?"
+        message={confirmReset ? `Username & Password ${confirmReset.nama} akan di-reset kembali ke default: stmik${confirmReset.nim}. Lanjutkan?` : ''}
+        confirmLabel="Reset Password"
+      />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

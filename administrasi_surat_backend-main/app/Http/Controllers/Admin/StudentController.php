@@ -39,9 +39,11 @@ class StudentController extends Controller
         ]);
 
         return DB::transaction(function () use ($request) {
+            $defaultUsnPw = 'stmik' . trim($request->nim);
+
             $user = User::create([
-                'username' => $request->nim,
-                'password' => Hash::make($request->nim),
+                'username' => $defaultUsnPw,
+                'password' => Hash::make($defaultUsnPw),
                 'role' => 'mahasiswa',
             ]);
 
@@ -54,7 +56,7 @@ class StudentController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Mahasiswa berhasil ditambahkan.',
+                'message' => 'Mahasiswa berhasil ditambahkan. Username & Password default: ' . $defaultUsnPw,
                 'data' => $mahasiswa->load('user'),
             ], 201);
         });
@@ -79,15 +81,42 @@ class StudentController extends Controller
             'prodi' => $request->prodi,
         ]);
 
-        // Update username to match NIM
+        // Update username to match stmik[NIM]
         if ($mahasiswa->user) {
-            $mahasiswa->user->update(['username' => $request->nim]);
+            $defaultUsnPw = 'stmik' . trim($request->nim);
+            $mahasiswa->user->update(['username' => $defaultUsnPw]);
         }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data mahasiswa berhasil diperbarui.',
             'data' => $mahasiswa->fresh('user'),
+        ]);
+    }
+
+    /**
+     * Reset student password to default (stmik[NIM])
+     */
+    public function resetPassword($id)
+    {
+        $mahasiswa = Mahasiswa::with('user')->findOrFail($id);
+
+        if (!$mahasiswa->user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun user mahasiswa tidak ditemukan.',
+            ], 404);
+        }
+
+        $defaultUsnPw = 'stmik' . trim($mahasiswa->nim);
+        $mahasiswa->user->update([
+            'username' => $defaultUsnPw,
+            'password' => Hash::make($defaultUsnPw),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password & Username mahasiswa berhasil di-reset ke default: ' . $defaultUsnPw,
         ]);
     }
 
@@ -123,7 +152,7 @@ class StudentController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data mahasiswa berhasil di-import.',
+                'message' => 'Data mahasiswa berhasil di-import. Username & Password default diset ke stmik[NIM].',
             ]);
         } catch (Exception $e) {
             return response()->json([
