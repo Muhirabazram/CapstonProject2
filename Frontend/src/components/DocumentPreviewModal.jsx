@@ -1,4 +1,3 @@
-import { renderAsync } from 'docx-preview'
 import { AlertCircle, Download, FileText, Info, Loader2, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '../api/axios'
@@ -112,6 +111,7 @@ export default function DocumentPreviewModal({
         try {
           if (containerRef.current) {
             containerRef.current.innerHTML = ''
+            const { renderAsync } = await import('docx-preview')
             await renderAsync(arrayBuffer, containerRef.current, null, {
               className: 'docx-rendered',
               inWrapper: true,
