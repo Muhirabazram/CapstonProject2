@@ -1,13 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/axios'
 import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import Modal from '../../components/Modal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Upload, FileSpreadsheet, CheckCircle, Users, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Key, RotateCcw } from 'lucide-react'
+import { Upload, FileSpreadsheet, Users, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Key, RotateCcw, Info, ChevronDown, X } from 'lucide-react'
 
-const emptyForm = { nim: '', nama: '', prodi: '' }
+const emptyForm = {
+  nim: '', nama: '', prodi: '',
+  angkatan: '', jenis_kelamin: '', jenis_mahasiswa: 'Reguler',
+  tempat_lahir: '', tanggal_lahir: '', alamat: '',
+  dosen_wali: '', status_mahasiswa: 'Aktif',
+}
 const PER_PAGE = 10
 
 export default function ImportMahasiswa() {
@@ -22,6 +27,10 @@ export default function ImportMahasiswa() {
   const [showModal, setShowModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [confirmReset, setConfirmReset] = useState(null)
+  const [showFormatInfo, setShowFormatInfo] = useState(false)
+  const [filterAngkatan, setFilterAngkatan] = useState('')
+  const [filterProdi, setFilterProdi] = useState('')
+  const [filterJenisMhs, setFilterJenisMhs] = useState('')
   const fileRef = useRef()
   const toast = useToast()
 
@@ -31,14 +40,33 @@ export default function ImportMahasiswa() {
 
   useEffect(() => { fetchStudents() }, [])
 
-  const filtered = students.filter((s) =>
-    `${s.nim} ${s.nama} ${s.prodi}`.toLowerCase().includes(search.toLowerCase())
-  )
+  const uniqueAngkatan = useMemo(() => [...new Set(students.map(s => s.angkatan).filter(Boolean))].sort(), [students])
+  const uniqueProdi = useMemo(() => [...new Set(students.map(s => s.prodi).filter(Boolean))].sort(), [students])
+  const uniqueJenisMhs = useMemo(() => [...new Set(students.map(s => s.jenis_mahasiswa).filter(Boolean))].sort(), [students])
+
+  const filtered = useMemo(() => {
+    return students.filter((s) => {
+      const matchSearch = `${s.nim} ${s.nama}`.toLowerCase().includes(search.toLowerCase())
+      const matchAngkatan = !filterAngkatan || s.angkatan === filterAngkatan
+      const matchProdi = !filterProdi || s.prodi === filterProdi
+      const matchJenisMhs = !filterJenisMhs || s.jenis_mahasiswa === filterJenisMhs
+      return matchSearch && matchAngkatan && matchProdi && matchJenisMhs
+    })
+  }, [students, search, filterAngkatan, filterProdi, filterJenisMhs])
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE)
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
-  useEffect(() => { setPage(1) }, [search])
+  useEffect(() => { setPage(1) }, [search, filterAngkatan, filterProdi, filterJenisMhs])
+
+  const clearFilters = () => {
+    setSearch('')
+    setFilterAngkatan('')
+    setFilterProdi('')
+    setFilterJenisMhs('')
+  }
+
+  const hasFilter = search || filterAngkatan || filterProdi || filterJenisMhs
 
   const handleFile = async (file) => {
     if (!file) return
@@ -72,7 +100,19 @@ export default function ImportMahasiswa() {
   const handleFileInput = (e) => { handleFile(e.target.files[0]); e.target.value = '' }
 
   const openAdd = () => { setForm(emptyForm); setEditId(null); setShowModal(true) }
-  const openEdit = (s) => { setForm({ nim: s.nim, nama: s.nama, prodi: s.prodi }); setEditId(s.id); setShowModal(true) }
+  const openEdit = (s) => {
+    setForm({
+      nim: s.nim, nama: s.nama, prodi: s.prodi,
+      angkatan: s.angkatan || '', jenis_kelamin: s.jenis_kelamin || '',
+      jenis_mahasiswa: s.jenis_mahasiswa || 'Reguler',
+      tempat_lahir: s.tempat_lahir || '',
+      tanggal_lahir: s.tanggal_lahir ? s.tanggal_lahir.split('T')[0] : '',
+      alamat: s.alamat || '',
+      dosen_wali: s.dosen_wali || '', status_mahasiswa: s.status_mahasiswa || 'Aktif',
+    })
+    setEditId(s.id)
+    setShowModal(true)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -122,10 +162,24 @@ export default function ImportMahasiswa() {
           <h2 className="page-title">Kelola Mahasiswa</h2>
           <p className="page-description mt-1">Import dari Excel atau tambah data secara manual.</p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Tambah
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFormatInfo(!showFormatInfo)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              showFormatInfo
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                : 'btn-secondary'
+            }`}
+            title="Lihat format kolom Excel"
+          >
+            <Info className="w-4 h-4" />
+            Format Import
+          </button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Tambah
+          </button>
+        </div>
       </div>
 
       {/* Account Info Notice Banner */}
@@ -177,25 +231,50 @@ export default function ImportMahasiswa() {
 
       {/* Table */}
       <div className="card overflow-hidden">
-        <div className="px-6 py-4 flex items-center justify-between gap-4 flex-wrap" style={{ borderBottom: '1px solid var(--border-color)' }}>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Data Mahasiswa</h3>
-            <span className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-secondary)' }}>
-              {filtered.length}
-            </span>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Data Mahasiswa</h3>
+              <span className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-secondary)' }}>
+                {filtered.length}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <select value={filterAngkatan} onChange={(e) => setFilterAngkatan(e.target.value)} className="select-base text-xs py-1.5 px-3 w-auto">
+                <option value="">Semua Angkatan</option>
+                {uniqueAngkatan.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+              <select value={filterProdi} onChange={(e) => setFilterProdi(e.target.value)} className="select-base text-xs py-1.5 px-3 w-auto">
+                <option value="">Semua Prodi</option>
+                {uniqueProdi.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select value={filterJenisMhs} onChange={(e) => setFilterJenisMhs(e.target.value)} className="select-base text-xs py-1.5 px-3 w-auto">
+                <option value="">Semua Jenis</option>
+                {uniqueJenisMhs.map(j => <option key={j} value={j}>{j}</option>)}
+              </select>
+              {hasFilter && (
+                <button onClick={clearFilters} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  <X className="w-3 h-3" />
+                  Reset
+                </button>
+              )}
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Cari NIM / nama..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="input-base pl-9 w-56"
+                />
+              </div>
+            </div>
           </div>
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="Cari NIM / nama / prodi..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-base pl-9 w-64"
-            />
-          </div>
+
+          {/* Format Info Panel - removed, now in modal */}
         </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -203,21 +282,33 @@ export default function ImportMahasiswa() {
                 <th className="table-header text-left px-6 py-3">NIM</th>
                 <th className="table-header text-left px-6 py-3">Nama Lengkap</th>
                 <th className="table-header text-left px-6 py-3 hidden sm:table-cell">Program Studi</th>
+                <th className="table-header text-left px-6 py-3 hidden md:table-cell">Angkatan</th>
+                <th className="table-header text-left px-6 py-3 hidden lg:table-cell">Jenis</th>
                 <th className="table-header text-left px-6 py-3 hidden md:table-cell">Akun Default</th>
                 <th className="table-header text-right px-6 py-3">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="px-6 py-12"><SkeletonTable rows={5} cols={5} /></td></tr>
+                <tr><td colSpan={7} className="px-6 py-12"><SkeletonTable rows={5} cols={7} /></td></tr>
               ) : paged.length === 0 ? (
-                <tr><td colSpan={5}><EmptyState message={search ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
+                <tr><td colSpan={7}><EmptyState message={hasFilter ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
               ) : (
                 paged.map((s) => (
                   <tr key={s.id} className="table-row">
                     <td className="px-6 py-3 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.nim}</td>
                     <td className="px-6 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>{s.nama}</td>
                     <td className="px-6 py-3 hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>{s.prodi}</td>
+                    <td className="px-6 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.angkatan || '-'}</td>
+                    <td className="px-6 py-3 hidden lg:table-cell text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <span className={`px-2 py-0.5 rounded-md font-medium ${
+                        s.jenis_mahasiswa === 'Kelas Karyawan'
+                          ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                          : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                      }`}>
+                        {s.jenis_mahasiswa || '-'}
+                      </span>
+                    </td>
                     <td className="px-6 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
                       stmik{s.nim}
                     </td>
@@ -289,25 +380,88 @@ export default function ImportMahasiswa() {
 
       {/* Add/Edit Modal */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editId ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>NIM</label>
-            <input type="text" required value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} className="input-base w-full" placeholder="Masukkan NIM" />
-            {!editId && form.nim && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
-                Default Username & Password: <code className="font-mono font-bold">stmik{form.nim}</code>
-              </p>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>NIM <span className="text-red-500">*</span></label>
+              <input type="text" required value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} className="input-base w-full" placeholder="Masukkan NIM" />
+              {!editId && form.nim && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
+                  Default Username & Password: <code className="font-mono font-bold">stmik{form.nim}</code>
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Lengkap <span className="text-red-500">*</span></label>
+              <input type="text" required value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} className="input-base w-full" placeholder="Masukkan nama" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Program Studi <span className="text-red-500">*</span></label>
+              <select required value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} className="select-base w-full">
+                <option value="">Pilih Program Studi</option>
+                <option value="Teknik Informatika">Teknik Informatika</option>
+                <option value="Sistem Informasi">Sistem Informasi</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Angkatan</label>
+              <input type="text" value={form.angkatan} onChange={(e) => setForm({ ...form, angkatan: e.target.value })} className="input-base w-full" placeholder="Contoh: 2024" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Jenis Kelamin</label>
+              <select value={form.jenis_kelamin} onChange={(e) => setForm({ ...form, jenis_kelamin: e.target.value })} className="select-base w-full">
+                <option value="">Pilih</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Jenis Mahasiswa</label>
+              <select value={form.jenis_mahasiswa} onChange={(e) => setForm({ ...form, jenis_mahasiswa: e.target.value })} className="select-base w-full">
+                <option value="Reguler">Reguler</option>
+                <option value="Kelas Karyawan">Kelas Karyawan</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Lengkap</label>
-            <input type="text" required value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} className="input-base w-full" placeholder="Masukkan nama" />
+
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Data Pribadi</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tempat Lahir</label>
+                <input type="text" value={form.tempat_lahir} onChange={(e) => setForm({ ...form, tempat_lahir: e.target.value })} className="input-base w-full" placeholder="Kota lahir" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tanggal Lahir</label>
+                <input type="date" value={form.tanggal_lahir} onChange={(e) => setForm({ ...form, tanggal_lahir: e.target.value })} className="input-base w-full" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Alamat</label>
+                <textarea value={form.alamat} onChange={(e) => setForm({ ...form, alamat: e.target.value })} className="input-base w-full" rows={2} placeholder="Alamat lengkap" />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Program Studi</label>
-            <input type="text" required value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} className="input-base w-full" placeholder="Masukkan prodi" />
+
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Data Akademik</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Dosen Wali</label>
+                <input type="text" value={form.dosen_wali} onChange={(e) => setForm({ ...form, dosen_wali: e.target.value })} className="input-base w-full" placeholder="Nama dosen wali" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Status Mahasiswa</label>
+                <select value={form.status_mahasiswa} onChange={(e) => setForm({ ...form, status_mahasiswa: e.target.value })} className="select-base w-full">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Cuti">Cuti</option>
+                  <option value="Lulus">Lulus</option>
+                  <option value="Keluar">Keluar</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
+
+          <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
             <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Batal</button>
             <button type="submit" className="btn-primary">{editId ? 'Simpan Perubahan' : 'Tambah'}</button>
           </div>
@@ -333,6 +487,62 @@ export default function ImportMahasiswa() {
         message="Data mahasiswa ini akan dihapus secara permanen. Lanjutkan?"
         confirmLabel="Hapus"
       />
+
+      {/* Format Info Modal */}
+      <Modal open={showFormatInfo} onClose={() => setShowFormatInfo(false)} title="Format Kolom File Import Excel">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 shrink-0" style={{ color: 'var(--text-secondary)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Pastikan file Excel memiliki kolom-kolom berikut:</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                  <th className="text-left py-2 pr-4 font-semibold" style={{ color: 'var(--text-primary)' }}>Kolom</th>
+                  <th className="text-left py-2 pr-4 font-semibold" style={{ color: 'var(--text-primary)' }}>Keterangan</th>
+                  <th className="text-left py-2 font-semibold" style={{ color: 'var(--text-primary)' }}>Contoh</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>NIM</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nomor Induk Mahasiswa</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>1224014</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Nama</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nama lengkap mahasiswa</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Budi Santoso</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Prodi</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Program Studi</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Teknik Informatika</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Angkatan</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Tahun angkatan</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>2024</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Jenis Kelamin</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Laki-laki atau Perempuan</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Laki-laki</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Jenis Mahasiswa</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Reguler atau Kelas Karyawan</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Reguler</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs pt-2" style={{ borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+            * Semua kolom wajib diisi. Kolom yang tidak ada di file akan otomatis kosong/null di sistem.
+          </p>
+        </div>
+      </Modal>
     </div>
   )
 }

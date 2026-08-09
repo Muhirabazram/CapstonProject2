@@ -13,6 +13,7 @@ import MahasiswaDashboard from './pages/mahasiswa/MahasiswaDashboard'
 import DaftarTemplate from './pages/mahasiswa/DaftarTemplate'
 import FormPengajuan from './pages/mahasiswa/FormPengajuan'
 import RiwayatStatus from './pages/mahasiswa/RiwayatStatus'
+import ProfilSaya from './pages/ProfilSaya'
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
@@ -42,12 +43,14 @@ function AppRoutes() {
         <Route path="mahasiswa" element={<ImportMahasiswa />} />
         <Route path="kategori" element={<KelolaKategori />} />
         <Route path="pengajuan" element={<KelolaPengajuan />} />
+        <Route path="profil" element={<ProfilSaya />} />
       </Route>
       <Route path="/mahasiswa" element={<ProtectedRoute role="mahasiswa"><MahasiswaLayout /></ProtectedRoute>}>
         <Route index element={<MahasiswaDashboard />} />
         <Route path="template" element={<DaftarTemplate />} />
         <Route path="pengajuan" element={<FormPengajuan />} />
         <Route path="riwayat" element={<RiwayatStatus />} />
+        <Route path="profil" element={<ProfilSaya />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

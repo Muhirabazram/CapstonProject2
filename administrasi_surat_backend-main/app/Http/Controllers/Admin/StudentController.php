@@ -36,6 +36,14 @@ class StudentController extends Controller
             'nim' => 'required|string|max:20|unique:mahasiswas,nim',
             'nama' => 'required|string|max:255',
             'prodi' => 'required|string|max:255',
+            'angkatan' => 'nullable|string|max:10',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'jenis_mahasiswa' => 'nullable|in:Reguler,Kelas Karyawan',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'alamat' => 'nullable|string|max:500',
+            'dosen_wali' => 'nullable|string|max:100',
+            'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -52,6 +60,14 @@ class StudentController extends Controller
                 'nim' => $request->nim,
                 'nama' => $request->nama,
                 'prodi' => $request->prodi,
+                'angkatan' => $request->angkatan,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'jenis_mahasiswa' => $request->jenis_mahasiswa ?? 'Reguler',
+                'tempat_lahir' => $request->tempat_lahir,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'alamat' => $request->alamat,
+                'dosen_wali' => $request->dosen_wali,
+                'status_mahasiswa' => $request->status_mahasiswa ?? 'Aktif',
             ]);
 
             return response()->json([
@@ -73,15 +89,30 @@ class StudentController extends Controller
             'nim' => 'required|string|max:20|unique:mahasiswas,nim,' . $id,
             'nama' => 'required|string|max:255',
             'prodi' => 'required|string|max:255',
+            'angkatan' => 'nullable|string|max:10',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'jenis_mahasiswa' => 'nullable|in:Reguler,Kelas Karyawan',
+            'tempat_lahir' => 'nullable|string|max:100',
+            'tanggal_lahir' => 'nullable|date',
+            'alamat' => 'nullable|string|max:500',
+            'dosen_wali' => 'nullable|string|max:100',
+            'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
         ]);
 
         $mahasiswa->update([
             'nim' => $request->nim,
             'nama' => $request->nama,
             'prodi' => $request->prodi,
+            'angkatan' => $request->angkatan,
+            'jenis_kelamin' => $request->jenis_kelamin,
+            'jenis_mahasiswa' => $request->jenis_mahasiswa,
+            'tempat_lahir' => $request->tempat_lahir,
+            'tanggal_lahir' => $request->tanggal_lahir,
+            'alamat' => $request->alamat,
+            'dosen_wali' => $request->dosen_wali,
+            'status_mahasiswa' => $request->status_mahasiswa,
         ]);
 
-        // Update username to match stmik[NIM]
         if ($mahasiswa->user) {
             $defaultUsnPw = 'stmik' . trim($request->nim);
             $mahasiswa->user->update(['username' => $defaultUsnPw]);

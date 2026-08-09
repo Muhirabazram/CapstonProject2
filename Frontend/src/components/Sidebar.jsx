@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import ChangePasswordModal from './ChangePasswordModal'
 import {
   LayoutDashboard, Users, FolderOpen, FileText,
-  Download, Send, Clock, LogOut, ChevronLeft, Key
+  Download, Send, Clock, LogOut, ChevronLeft, User, GraduationCap
 } from 'lucide-react'
 
 const adminLinks = [
@@ -21,12 +19,17 @@ const mahasiswaLinks = [
   { to: '/mahasiswa/riwayat', icon: Clock, label: 'Riwayat & Status' },
 ]
 
+const profileLink = {
+  admin: { to: '/admin/profil', icon: User, label: 'Profil Saya' },
+  mahasiswa: { to: '/mahasiswa/profil', icon: User, label: 'Profil Saya' },
+}
+
 export default function Sidebar({ role, open, onClose }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
   const links = role === 'admin' ? adminLinks : mahasiswaLinks
-  const name = user?.mahasiswa?.nama || user?.username || 'User'
+  const profile = profileLink[role]
+  const name = user?.mahasiswa?.nama || user?.name || user?.username || 'User'
 
   const handleLogout = async () => {
     await logout()
@@ -43,7 +46,7 @@ export default function Sidebar({ role, open, onClose }) {
       )}
 
       <aside
-        className={`fixed lg:static top-0 left-0 z-50 w-64 h-full flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:sticky top-0 left-0 z-50 w-64 h-screen flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         style={{ backgroundColor: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}
@@ -52,7 +55,7 @@ export default function Sidebar({ role, open, onClose }) {
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-color)' }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SI</span>
+              <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>SIASMA</p>
@@ -118,14 +121,21 @@ export default function Sidebar({ role, open, onClose }) {
 
         {/* Bottom Actions */}
         <div className="p-3 space-y-1" style={{ borderTop: '1px solid var(--border-color)' }}>
-          <button
-            onClick={() => setShowPasswordModal(true)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-navy-100 dark:hover:bg-navy-800 w-full transition-all duration-150"
-            style={{ color: 'var(--text-secondary)' }}
+          <NavLink
+            to={profile.to}
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-150 ${
+                isActive
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'hover:bg-navy-100 dark:hover:bg-navy-800'
+              }`
+            }
+            style={({ isActive }) => isActive ? {} : { color: 'var(--text-secondary)' }}
           >
-            <Key className="w-5 h-5 text-amber-500" />
-            Ubah Password
-          </button>
+            <User className="w-5 h-5" />
+            Profil Saya
+          </NavLink>
 
           <button
             onClick={handleLogout}
@@ -136,12 +146,6 @@ export default function Sidebar({ role, open, onClose }) {
           </button>
         </div>
       </aside>
-
-      {/* Change Password Modal */}
-      <ChangePasswordModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-      />
     </>
   )
 }

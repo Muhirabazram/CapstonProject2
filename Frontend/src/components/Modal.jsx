@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export default function Modal({ open, onClose, title, children, wide }) {
@@ -25,11 +26,11 @@ export default function Modal({ open, onClose, title, children, wide }) {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
       style={{ backgroundColor: 'var(--overlay)' }}
       role="dialog"
       aria-modal="true"
@@ -53,6 +54,7 @@ export default function Modal({ open, onClose, title, children, wide }) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

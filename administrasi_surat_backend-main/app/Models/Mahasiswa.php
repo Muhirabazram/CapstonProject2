@@ -14,6 +14,20 @@ class Mahasiswa extends Model
         'nim',
         'nama',
         'prodi',
+        'angkatan',
+        'jenis_kelamin',
+        'jenis_mahasiswa',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'alamat',
+        'email',
+        'no_hp',
+        'dosen_wali',
+        'status_mahasiswa',
+    ];
+
+    protected $casts = [
+        'tanggal_lahir' => 'date',
     ];
 
     public function user()
