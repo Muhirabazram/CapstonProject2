@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
@@ -7,7 +7,7 @@ import EmptyState from '../../components/EmptyState'
 import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Download, FileText, Clock, Eye, AlertCircle, Edit3 } from 'lucide-react'
+import { Download, FileText, Clock, Eye, AlertCircle, Edit3, RotateCcw } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -20,13 +20,46 @@ export default function RiwayatStatus() {
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [filterStatus, setFilterStatus] = useState('')
   const [selectedId, setSelectedId] = useState(null)
   const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
   const toast = useToast()
 
+  const fetchHistory = (showToast = false) => {
+    setRefreshing(true)
+    api.get('/student/requests/history')
+      .then((r) => {
+        setRequests(r.data.data)
+        if (showToast) toast.success('Riwayat status berhasil diperbarui')
+      })
+      .catch(() => {
+        if (showToast) toast.error('Gagal memperbarui riwayat')
+      })
+      .finally(() => {
+        setLoading(false)
+        setRefreshing(false)
+      })
+  }
+
   useEffect(() => {
-    api.get('/student/requests/history').then((r) => setRequests(r.data.data)).catch(() => {}).finally(() => setLoading(false))
+    fetchHistory()
   }, [])
+
+  const statusCounts = useMemo(() => {
+    return {
+      diajukan: requests.filter(r => r.status === 'diajukan').length,
+      diterima: requests.filter(r => r.status === 'diterima').length,
+      diproses: requests.filter(r => r.status === 'diproses').length,
+      ditolak: requests.filter(r => r.status === 'ditolak').length,
+      selesai: requests.filter(r => r.status === 'selesai').length,
+    }
+  }, [requests])
+
+  const filteredRequests = useMemo(() => {
+    if (!filterStatus) return requests
+    return requests.filter(r => r.status === filterStatus)
+  }, [requests, filterStatus])
 
   const handlePreviewResult = async (req) => {
     try {
@@ -104,10 +137,32 @@ export default function RiwayatStatus() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="page-title">Riwayat & Status</h2>
-        <p className="page-description mt-1">Daftar semua permohonan surat yang pernah Anda ajukan.</p>
+      {/* Header & Filter */}
+      <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+        <div>
+          <h2 className="page-title">Riwayat & Status</h2>
+          <p className="page-description mt-1">Daftar semua permohonan surat yang pernah Anda ajukan.</p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-44">
+            <option value="">Semua Status</option>
+            <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
+            <option value="diterima">Diterima ({statusCounts.diterima})</option>
+            <option value="diproses">Diproses ({statusCounts.diproses})</option>
+            <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
+            <option value="selesai">Selesai ({statusCounts.selesai})</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => fetchHistory(true)}
+            disabled={refreshing || loading}
+            className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
+            title="Refresh Riwayat Status"
+          >
+            <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -128,10 +183,10 @@ export default function RiwayatStatus() {
                 <tbody>
                   {loading ? (
                     <tr><td colSpan={5} className="px-6 py-12"><SkeletonTable rows={4} cols={5} /></td></tr>
-                  ) : requests.length === 0 ? (
-                    <tr><td colSpan={5}><EmptyState message="Belum ada riwayat pengajuan" icon={FileText} /></td></tr>
+                  ) : filteredRequests.length === 0 ? (
+                    <tr><td colSpan={5}><EmptyState message={filterStatus ? "Tidak ada pengajuan dengan status ini" : "Belum ada riwayat pengajuan"} icon={FileText} /></td></tr>
                   ) : (
-                    requests.map((req) => (
+                    filteredRequests.map((req) => (
                       <tr
                         key={req.id}
                         className={`table-row cursor-pointer ${selectedId === req.id ? 'bg-primary/5 dark:bg-primary/10' : ''}`}

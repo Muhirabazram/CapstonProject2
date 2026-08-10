@@ -42,6 +42,8 @@ class StudentController extends Controller
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
             'alamat' => 'nullable|string|max:500',
+            'email' => 'nullable|email|max:100',
+            'no_hp' => 'nullable|string|max:20',
             'dosen_wali' => 'nullable|string|max:100',
             'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
         ]);
@@ -66,6 +68,8 @@ class StudentController extends Controller
                 'tempat_lahir' => $request->tempat_lahir,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'alamat' => $request->alamat,
+                'email' => $request->email,
+                'no_hp' => $request->no_hp,
                 'dosen_wali' => $request->dosen_wali,
                 'status_mahasiswa' => $request->status_mahasiswa ?? 'Aktif',
             ]);
@@ -95,6 +99,8 @@ class StudentController extends Controller
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
             'alamat' => 'nullable|string|max:500',
+            'email' => 'nullable|email|max:100',
+            'no_hp' => 'nullable|string|max:20',
             'dosen_wali' => 'nullable|string|max:100',
             'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
         ]);
@@ -109,6 +115,8 @@ class StudentController extends Controller
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'alamat' => $request->alamat,
+            'email' => $request->email,
+            'no_hp' => $request->no_hp,
             'dosen_wali' => $request->dosen_wali,
             'status_mahasiswa' => $request->status_mahasiswa,
         ]);

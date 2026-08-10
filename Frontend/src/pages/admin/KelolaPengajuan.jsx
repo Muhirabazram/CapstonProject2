@@ -7,7 +7,7 @@ import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Eye, Download, Search, Filter, FileText } from 'lucide-react'
+import { Eye, Download, Search, Filter, FileText, RotateCcw } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -19,6 +19,7 @@ function formatDate(d) {
 export default function KelolaPengajuan() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
   const [selected, setSelected] = useState(null)
   const [newStatus, setNewStatus] = useState('')
@@ -33,8 +34,20 @@ export default function KelolaPengajuan() {
 
   const toast = useToast()
 
-  const fetchRequests = () => {
-    api.get('/admin/requests').then((r) => setRequests(r.data.data)).catch(() => {}).finally(() => setLoading(false))
+  const fetchRequests = (showToast = false) => {
+    setRefreshing(true)
+    api.get('/admin/requests')
+      .then((r) => {
+        setRequests(r.data.data)
+        if (showToast) toast.success('Data pengajuan berhasil diperbarui')
+      })
+      .catch(() => {
+        if (showToast) toast.error('Gagal memperbarui data pengajuan')
+      })
+      .finally(() => {
+        setLoading(false)
+        setRefreshing(false)
+      })
   }
   useEffect(() => { fetchRequests() }, [])
 
@@ -195,14 +208,26 @@ export default function KelolaPengajuan() {
             placeholder="Cari nama, NPM, atau kategori..."
           />
         </div>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-44">
-          <option value="">Semua Status</option>
-          <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
-          <option value="diterima">Diterima ({statusCounts.diterima})</option>
-          <option value="diproses">Diproses ({statusCounts.diproses})</option>
-          <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
-          <option value="selesai">Selesai ({statusCounts.selesai})</option>
-        </select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-44">
+            <option value="">Semua Status</option>
+            <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
+            <option value="diterima">Diterima ({statusCounts.diterima})</option>
+            <option value="diproses">Diproses ({statusCounts.diproses})</option>
+            <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
+            <option value="selesai">Selesai ({statusCounts.selesai})</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => fetchRequests(true)}
+            disabled={refreshing || loading}
+            className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
+            title="Refresh Data Pengajuan"
+          >
+            <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Table */}

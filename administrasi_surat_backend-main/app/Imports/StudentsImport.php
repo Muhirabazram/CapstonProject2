@@ -28,6 +28,20 @@ class StudentsImport implements ToCollection, WithHeadingRow
             $customPassword = $row['password'] ?? null;
             $passwordHash = $customPassword ? Hash::make((string) $customPassword) : Hash::make($defaultUsnPw);
 
+            $noHp = $row['no_hp'] ?? $row['nohp'] ?? $row['no_telepon'] ?? $row['telepon'] ?? $row['phone'] ?? null;
+            $email = $row['email'] ?? $row['e_mail'] ?? null;
+            $angkatan = $row['angkatan'] ?? $row['tahun_angkatan'] ?? null;
+            $jk = $row['jenis_kelamin'] ?? $row['jk'] ?? null;
+            $jenisMhs = $row['jenis_mahasiswa'] ?? $row['jenis'] ?? 'Reguler';
+            $dosenWali = $row['dosen_wali'] ?? null;
+            $alamat = $row['alamat'] ?? null;
+
+            // Normalize Jenis Kelamin (L/P)
+            if ($jk) {
+                $firstChar = strtoupper(substr(trim((string) $jk), 0, 1));
+                $jk = in_array($firstChar, ['L', 'P']) ? $firstChar : null;
+            }
+
             // Create or Update User account
             $user = User::updateOrCreate(
                 ['username' => $defaultUsnPw],
@@ -38,13 +52,23 @@ class StudentsImport implements ToCollection, WithHeadingRow
             );
 
             // Create or Update Mahasiswa profile
+            $mahasiswaData = [
+                'nim' => $cleanNim,
+                'nama' => (string) $nama,
+                'prodi' => (string) $prodi,
+            ];
+
+            if ($noHp) $mahasiswaData['no_hp'] = (string) $noHp;
+            if ($email) $mahasiswaData['email'] = (string) $email;
+            if ($angkatan) $mahasiswaData['angkatan'] = (string) $angkatan;
+            if ($jk) $mahasiswaData['jenis_kelamin'] = $jk;
+            if ($jenisMhs) $mahasiswaData['jenis_mahasiswa'] = (string) $jenisMhs;
+            if ($dosenWali) $mahasiswaData['dosen_wali'] = (string) $dosenWali;
+            if ($alamat) $mahasiswaData['alamat'] = (string) $alamat;
+
             Mahasiswa::updateOrCreate(
                 ['user_id' => $user->id],
-                [
-                    'nim' => $cleanNim,
-                    'nama' => (string) $nama,
-                    'prodi' => (string) $prodi,
-                ]
+                $mahasiswaData
             );
         }
     }

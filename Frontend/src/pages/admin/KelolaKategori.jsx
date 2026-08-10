@@ -19,7 +19,7 @@ export default function KelolaKategori() {
   const toast = useToast()
 
   const fetchCategories = () => {
-    api.get('/admin/categories').then((r) => setCategories(r.data.data)).catch(() => {}).finally(() => setLoading(false))
+    api.get('/admin/categories').then((r) => setCategories(r.data.data)).catch(() => { }).finally(() => setLoading(false))
   }
   useEffect(() => { fetchCategories() }, [])
 

@@ -132,9 +132,9 @@ class RequestController extends Controller
             'values.variable',
             'requestRequirements.requirement',
         ])
-        ->where('mahasiswa_id', $mahasiswa->id)
-        ->latest()
-        ->get();
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->latest()
+            ->get();
 
         return response()->json([
             'status' => 'success',

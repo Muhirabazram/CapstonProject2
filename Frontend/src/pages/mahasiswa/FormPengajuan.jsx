@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, FileText, Send } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Modal from '../../components/Modal'
 import { useToast } from '../../context/ToastContext'
-import { CheckCircle, ArrowRight, ArrowLeft, Send, FileText, AlertCircle } from 'lucide-react'
 
 export default function FormPengajuan() {
   const navigate = useNavigate()
@@ -46,7 +46,7 @@ export default function FormPengajuan() {
           }
         }
       }
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(() => { }).finally(() => setLoading(false))
   }, [reapplyReq])
 
   const handleCategoryChange = (catId) => {
@@ -109,20 +109,20 @@ export default function FormPengajuan() {
     const newErrors = {}
     let valid = true
 
-    ;(selectedCat.variables || []).forEach((v) => {
-      if (!formValues[v.nama_variabel] || !formValues[v.nama_variabel].trim()) {
-        newErrors[v.nama_variabel] = `${v.nama_variabel.replace(/_/g, ' ')} wajib diisi`
-        valid = false
-      }
-    })
+      ; (selectedCat.variables || []).forEach((v) => {
+        if (!formValues[v.nama_variabel] || !formValues[v.nama_variabel].trim()) {
+          newErrors[v.nama_variabel] = `${v.nama_variabel.replace(/_/g, ' ')} wajib diisi`
+          valid = false
+        }
+      })
 
-    ;(selectedCat.requirements || []).forEach((r) => {
-      const hasOld = reapplyReq?.request_requirements?.some((oldR) => oldR.requirement_id === r.id && oldR.file_path)
-      if (!files[r.id] && !hasOld) {
-        newErrors[`req_${r.id}`] = `${r.nama_syarat} wajib diupload`
-        valid = false
-      }
-    })
+      ; (selectedCat.requirements || []).forEach((r) => {
+        const hasOld = reapplyReq?.request_requirements?.some((oldR) => oldR.requirement_id === r.id && oldR.file_path)
+        if (!files[r.id] && !hasOld) {
+          newErrors[`req_${r.id}`] = `${r.nama_syarat} wajib diupload`
+          valid = false
+        }
+      })
 
     const hasOldSig = reapplyReq?.file_ttd_digital_path
     if (Boolean(selectedCat?.ttd_digital) && !ttdFile && !hasOldSig) {
@@ -165,24 +165,24 @@ export default function FormPengajuan() {
     }
 
     let vi = 0
-    ;(selectedCat.variables || []).forEach((v) => {
-      const val = formValues[v.nama_variabel]
-      if (val) {
-        fd.append(`values[${vi}][variable_id]`, v.id)
-        fd.append(`values[${vi}][nilai_isian]`, val)
-        vi++
-      }
-    })
+      ; (selectedCat.variables || []).forEach((v) => {
+        const val = formValues[v.nama_variabel]
+        if (val) {
+          fd.append(`values[${vi}][variable_id]`, v.id)
+          fd.append(`values[${vi}][nilai_isian]`, val)
+          vi++
+        }
+      })
 
     let ri = 0
-    ;(selectedCat.requirements || []).forEach((r) => {
-      const file = files[r.id]
-      if (file) {
-        fd.append(`requirements[${ri}][requirement_id]`, r.id)
-        fd.append(`requirements[${ri}][file]`, file)
-        ri++
-      }
-    })
+      ; (selectedCat.requirements || []).forEach((r) => {
+        const file = files[r.id]
+        if (file) {
+          fd.append(`requirements[${ri}][requirement_id]`, r.id)
+          fd.append(`requirements[${ri}][file]`, file)
+          ri++
+        }
+      })
 
     if (ttdFile) {
       fd.append('file_ttd_digital', ttdFile)
@@ -245,11 +245,10 @@ export default function FormPengajuan() {
           {steps.map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                  step >= s.num
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step >= s.num
                     ? 'bg-primary text-white'
                     : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
-                }`}>
+                  }`}>
                   {step > s.num ? <CheckCircle className="w-4 h-4" /> : s.num}
                 </div>
                 <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? 'text-navy-800 dark:text-navy-100' : 'text-navy-400 dark:text-navy-600'}`}>

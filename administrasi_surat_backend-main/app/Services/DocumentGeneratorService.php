@@ -56,6 +56,29 @@ class DocumentGeneratorService
                 $dataMap['nim'] = $mahasiswa->nim;
                 $dataMap['prodi'] = $mahasiswa->prodi;
                 $dataMap['program_studi'] = $mahasiswa->prodi;
+
+                // Contact & Additional Profile Information
+                $noHp = $mahasiswa->no_hp ?? '';
+                $dataMap['no_hp'] = $noHp;
+                $dataMap['nohp'] = $noHp;
+                $dataMap['no_telepon'] = $noHp;
+                $dataMap['telepon'] = $noHp;
+                $dataMap['phone'] = $noHp;
+                $dataMap['hp'] = $noHp;
+
+                $email = $mahasiswa->email ?? '';
+                $dataMap['email'] = $email;
+                $dataMap['e_mail'] = $email;
+
+                $dataMap['alamat'] = $mahasiswa->alamat ?? '';
+                $dataMap['angkatan'] = $mahasiswa->angkatan ?? '';
+                $dataMap['jenis_kelamin'] = $mahasiswa->jenis_kelamin ?? '';
+                $dataMap['jk'] = $mahasiswa->jenis_kelamin ?? '';
+                $dataMap['jenis_mahasiswa'] = $mahasiswa->jenis_mahasiswa ?? '';
+                $dataMap['tempat_lahir'] = $mahasiswa->tempat_lahir ?? '';
+                $dataMap['tanggal_lahir'] = $mahasiswa->tanggal_lahir ? Carbon::parse($mahasiswa->tanggal_lahir)->locale('id')->isoFormat('D MMMM Y') : '';
+                $dataMap['dosen_wali'] = $mahasiswa->dosen_wali ?? '';
+                $dataMap['status_mahasiswa'] = $mahasiswa->status_mahasiswa ?? '';
             }
             $dataMap['tanggal'] = $formattedDate;
             $dataMap['tanggal_pengajuan'] = $formattedDate;

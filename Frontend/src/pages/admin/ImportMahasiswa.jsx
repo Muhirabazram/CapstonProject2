@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { ChevronLeft, ChevronRight, FileSpreadsheet, Info, Key, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Users, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import api from '../../api/axios'
-import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import EmptyState from '../../components/EmptyState'
 import Modal from '../../components/Modal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Upload, FileSpreadsheet, Users, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Key, RotateCcw, Info, ChevronDown, X } from 'lucide-react'
 
 const emptyForm = {
   nim: '', nama: '', prodi: '',
   angkatan: '', jenis_kelamin: '', jenis_mahasiswa: 'Reguler',
   tempat_lahir: '', tanggal_lahir: '', alamat: '',
+  email: '', no_hp: '',
   dosen_wali: '', status_mahasiswa: 'Aktif',
 }
 const PER_PAGE = 10
@@ -35,7 +36,7 @@ export default function ImportMahasiswa() {
   const toast = useToast()
 
   const fetchStudents = () => {
-    api.get('/admin/students').then((r) => setStudents(r.data.data)).catch(() => {}).finally(() => setLoading(false))
+    api.get('/admin/students').then((r) => setStudents(r.data.data)).catch(() => { }).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchStudents() }, [])
@@ -46,7 +47,7 @@ export default function ImportMahasiswa() {
 
   const filtered = useMemo(() => {
     return students.filter((s) => {
-      const matchSearch = `${s.nim} ${s.nama}`.toLowerCase().includes(search.toLowerCase())
+      const matchSearch = `${s.nim} ${s.nama} ${s.no_hp || ''} ${s.email || ''}`.toLowerCase().includes(search.toLowerCase())
       const matchAngkatan = !filterAngkatan || s.angkatan === filterAngkatan
       const matchProdi = !filterProdi || s.prodi === filterProdi
       const matchJenisMhs = !filterJenisMhs || s.jenis_mahasiswa === filterJenisMhs
@@ -108,6 +109,8 @@ export default function ImportMahasiswa() {
       tempat_lahir: s.tempat_lahir || '',
       tanggal_lahir: s.tanggal_lahir ? s.tanggal_lahir.split('T')[0] : '',
       alamat: s.alamat || '',
+      email: s.email || '',
+      no_hp: s.no_hp || '',
       dosen_wali: s.dosen_wali || '', status_mahasiswa: s.status_mahasiswa || 'Aktif',
     })
     setEditId(s.id)
@@ -165,11 +168,10 @@ export default function ImportMahasiswa() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFormatInfo(!showFormatInfo)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-              showFormatInfo
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${showFormatInfo
                 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
                 : 'btn-secondary'
-            }`}
+              }`}
             title="Lihat format kolom Excel"
           >
             <Info className="w-4 h-4" />
@@ -188,7 +190,7 @@ export default function ImportMahasiswa() {
         <div className="space-y-1">
           <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300">Informasi Akun Default Mahasiswa</h4>
           <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-            Username dan Password akun mahasiswa secara default diset ke <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 font-mono font-bold text-amber-900 dark:text-amber-200">stmik[NIM]</code> (Contoh: NIM <span className="font-bold">1224008</span> → Username: <code className="font-bold">stmik1224008</code> & Password: <code className="font-bold">stmik1224008</code>).
+            Username dan Password akun mahasiswa secara default diset ke <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 font-mono font-bold text-amber-900 dark:text-amber-200">stmik[NIM]</code> (Contoh: NIM <span className="font-bold">1224008</span> → Username: <code className="font-bold">1224008</code> & Password: <code className="font-bold">stmik1224008</code>).
           </p>
         </div>
       </div>
@@ -199,11 +201,10 @@ export default function ImportMahasiswa() {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => !importing && fileRef.current?.click()}
-        className={`card p-6 text-center cursor-pointer transition-all duration-200 ${
-          dragging
+        className={`card p-6 text-center cursor-pointer transition-all duration-200 ${dragging
             ? 'ring-2 ring-primary dark:ring-primary-200 bg-primary/5 dark:bg-primary/10'
             : 'hover:ring-1 hover:ring-primary/30'
-        }`}
+          }`}
         style={{ border: `2px dashed ${dragging ? 'var(--color-primary, #2563eb)' : 'var(--border-color)'}` }}
       >
         <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileInput} className="hidden" />
@@ -282,6 +283,7 @@ export default function ImportMahasiswa() {
                 <th className="table-header text-left px-6 py-3">NIM</th>
                 <th className="table-header text-left px-6 py-3">Nama Lengkap</th>
                 <th className="table-header text-left px-6 py-3 hidden sm:table-cell">Program Studi</th>
+                <th className="table-header text-left px-6 py-3 hidden md:table-cell">No. HP</th>
                 <th className="table-header text-left px-6 py-3 hidden md:table-cell">Angkatan</th>
                 <th className="table-header text-left px-6 py-3 hidden lg:table-cell">Jenis</th>
                 <th className="table-header text-left px-6 py-3 hidden md:table-cell">Akun Default</th>
@@ -290,22 +292,22 @@ export default function ImportMahasiswa() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-6 py-12"><SkeletonTable rows={5} cols={7} /></td></tr>
+                <tr><td colSpan={8} className="px-6 py-12"><SkeletonTable rows={5} cols={8} /></td></tr>
               ) : paged.length === 0 ? (
-                <tr><td colSpan={7}><EmptyState message={hasFilter ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
+                <tr><td colSpan={8}><EmptyState message={hasFilter ? 'Tidak ditemukan' : 'Belum ada data mahasiswa'} icon={Users} /></td></tr>
               ) : (
                 paged.map((s) => (
                   <tr key={s.id} className="table-row">
                     <td className="px-6 py-3 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.nim}</td>
                     <td className="px-6 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>{s.nama}</td>
                     <td className="px-6 py-3 hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>{s.prodi}</td>
+                    <td className="px-6 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.no_hp || '-'}</td>
                     <td className="px-6 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{s.angkatan || '-'}</td>
                     <td className="px-6 py-3 hidden lg:table-cell text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      <span className={`px-2 py-0.5 rounded-md font-medium ${
-                        s.jenis_mahasiswa === 'Kelas Karyawan'
+                      <span className={`px-2 py-0.5 rounded-md font-medium ${s.jenis_mahasiswa === 'Kelas Karyawan'
                           ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
                           : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                      }`}>
+                        }`}>
                         {s.jenis_mahasiswa || '-'}
                       </span>
                     </td>
@@ -355,11 +357,10 @@ export default function ImportMahasiswa() {
                 <button
                   key={n}
                   onClick={() => setPage(n)}
-                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
-                    n === page
+                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${n === page
                       ? 'bg-primary text-white'
                       : 'hover:bg-navy-100 dark:hover:bg-navy-800'
-                  }`}
+                    }`}
                   style={n === page ? {} : { color: 'var(--text-secondary)' }}
                 >
                   {n}
@@ -425,8 +426,16 @@ export default function ImportMahasiswa() {
           </div>
 
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Data Pribadi</p>
+            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Data Pribadi & Kontak</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>No. HP / WhatsApp</label>
+                <input type="text" value={form.no_hp} onChange={(e) => setForm({ ...form, no_hp: e.target.value })} className="input-base w-full" placeholder="08xxxxxxxxxx" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-base w-full" placeholder="email@contoh.com" />
+              </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tempat Lahir</label>
                 <input type="text" value={form.tempat_lahir} onChange={(e) => setForm({ ...form, tempat_lahir: e.target.value })} className="input-base w-full" placeholder="Kota lahir" />
@@ -530,10 +539,20 @@ export default function ImportMahasiswa() {
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Laki-laki atau Perempuan</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Laki-laki</td>
                 </tr>
-                <tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Jenis Mahasiswa</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Reguler atau Kelas Karyawan</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Reguler</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>No HP</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nomor HP / Whatsapp</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>08123456789</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Email</td>
+                  <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Alamat Email Mahasiswa</td>
+                  <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>mahasiswa@example.com</td>
                 </tr>
               </tbody>
             </table>

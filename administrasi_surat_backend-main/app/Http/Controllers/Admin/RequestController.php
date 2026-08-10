@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\LetterRequest;
 use App\Services\DocumentGeneratorService;
-use Illuminate\Http\Request;
+use App\Mail\LetterStatusNotification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Exception;
 
 class RequestController extends Controller
@@ -79,6 +81,8 @@ class RequestController extends Controller
             $letterRequest->file_hasil_path = $filePath;
             $letterRequest->save();
 
+            $this->sendNotificationEmail($letterRequest);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Status pengajuan berhasil diperbarui menjadi selesai.',
@@ -92,6 +96,8 @@ class RequestController extends Controller
         $letterRequest->status = $request->status;
         $letterRequest->save();
 
+        $this->sendNotificationEmail($letterRequest);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Status pengajuan berhasil diperbarui.',
@@ -100,5 +106,22 @@ class RequestController extends Controller
                 'file_hasil_path' => $letterRequest->file_hasil_path,
             ],
         ]);
+    }
+
+    /**
+     * Helper to safely send email status notification to student
+     */
+    private function sendNotificationEmail(LetterRequest $letterRequest): void
+    {
+        $letterRequest->loadMissing(['mahasiswa.user', 'category']);
+        $studentEmail = $letterRequest->mahasiswa?->email ?? $letterRequest->mahasiswa?->user?->email;
+
+        if ($studentEmail) {
+            try {
+                Mail::to($studentEmail)->send(new LetterStatusNotification($letterRequest));
+            } catch (Exception $e) {
+                logger()->error('Gagal mengirim email notifikasi status surat ID ' . $letterRequest->id . ': ' . $e->getMessage());
+            }
+        }
     }
 }

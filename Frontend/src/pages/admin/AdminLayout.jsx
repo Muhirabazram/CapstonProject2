@@ -1,8 +1,9 @@
+import { Menu, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../../components/Sidebar'
+import NotificationBell from '../../components/NotificationBell'
 import { useTheme } from '../../context/ThemeContext'
-import { Menu, Sun, Moon } from 'lucide-react'
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -34,14 +35,17 @@ export default function AdminLayout() {
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sistem Administrasi Surat</p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-            style={{ color: 'var(--text-secondary)' }}
-            title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell role="admin" />
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
+              style={{ color: 'var(--text-secondary)' }}
+              title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
         </header>
 
         {/* Content */}
