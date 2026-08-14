@@ -1,1 +1,1 @@
-fix: Filter ketat tipe file dokumen prasyarat (PDF/DOCX) & perbaikan import DocumentGeneratorService di Student RequestController
+fix: Always generate fresh template output on download for Surat Permohonan & Surat Pengantar

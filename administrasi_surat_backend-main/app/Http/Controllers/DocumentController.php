@@ -31,29 +31,26 @@ class DocumentController extends Controller
     }
 
     /**
-     * Download generated/uploaded final letter document
+     * Download generated/uploaded final letter document (Surat Pengantar)
      */
     public function downloadResult($id)
     {
         $letterRequest = LetterRequest::with('category')->findOrFail($id);
 
-        if (!$letterRequest->file_hasil_path || !Storage::disk('public')->exists($letterRequest->file_hasil_path)) {
-            $generated = \App\Services\DocumentGeneratorService::generate($letterRequest);
-            if ($generated) {
-                $letterRequest->file_hasil_path = $generated;
-                $letterRequest->save();
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Dokumen hasil belum tersedia atau file tidak ditemukan.',
-                ], 404);
-            }
+        $generated = \App\Services\DocumentGeneratorService::generatePengantar($letterRequest);
+        $filePath = $generated ?: $letterRequest->file_hasil_path;
+
+        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Dokumen pengantar belum tersedia atau file tidak ditemukan.',
+            ], 404);
         }
 
-        $fullPath = Storage::disk('public')->path($letterRequest->file_hasil_path);
+        $fullPath = Storage::disk('public')->path($filePath);
         $categoryName = $letterRequest->category ? $letterRequest->category->nama_kategori : 'Surat';
-        $ext = pathinfo($letterRequest->file_hasil_path, PATHINFO_EXTENSION);
-        $downloadName = str_replace(' ', '_', $categoryName) . '_Selesai_' . $letterRequest->id . '.' . $ext;
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+        $downloadName = str_replace(' ', '_', $categoryName) . '_Pengantar_' . $letterRequest->id . '.' . $ext;
 
         return response()->download($fullPath, $downloadName);
     }
@@ -86,22 +83,19 @@ class DocumentController extends Controller
     {
         $letterRequest = LetterRequest::with('category')->findOrFail($id);
 
-        if (!$letterRequest->file_permohonan_path || !Storage::disk('public')->exists($letterRequest->file_permohonan_path)) {
-            $generated = \App\Services\DocumentGeneratorService::generatePermohonan($letterRequest);
-            if ($generated) {
-                $letterRequest->file_permohonan_path = $generated;
-                $letterRequest->save();
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Surat permohonan belum tersedia atau file tidak ditemukan.',
-                ], 404);
-            }
+        $generated = \App\Services\DocumentGeneratorService::generatePermohonan($letterRequest);
+        $filePath = $generated ?: $letterRequest->file_permohonan_path;
+
+        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Surat permohonan belum tersedia atau file tidak ditemukan.',
+            ], 404);
         }
 
-        $fullPath = Storage::disk('public')->path($letterRequest->file_permohonan_path);
+        $fullPath = Storage::disk('public')->path($filePath);
         $categoryName = $letterRequest->category ? $letterRequest->category->nama_kategori : 'Surat';
-        $ext = pathinfo($letterRequest->file_permohonan_path, PATHINFO_EXTENSION);
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
         $downloadName = str_replace(' ', '_', $categoryName) . '_Permohonan_' . $letterRequest->id . '.' . $ext;
 
         return response()->download($fullPath, $downloadName);

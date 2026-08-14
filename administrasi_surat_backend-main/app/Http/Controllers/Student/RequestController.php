@@ -172,21 +172,21 @@ class RequestController extends Controller
             ], 400);
         }
 
-        // If file_hasil_path is missing, generate on demand
-        if (!$letterRequest->file_hasil_path || !Storage::disk('public')->exists($letterRequest->file_hasil_path)) {
-            $generated = \App\Services\DocumentGeneratorService::generate($letterRequest);
-            if ($generated) {
-                $letterRequest->file_hasil_path = $generated;
-                $letterRequest->save();
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'File surat tidak ditemukan atau template belum disiapkan admin.',
-                ], 404);
-            }
+        $generated = DocumentGeneratorService::generatePengantar($letterRequest);
+        $filePath = $generated ?: $letterRequest->file_hasil_path;
+
+        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'File surat tidak ditemukan atau template belum disiapkan admin.',
+            ], 404);
         }
 
-        $fullPath = Storage::disk('public')->path($letterRequest->file_hasil_path);
-        return response()->download($fullPath);
+        $fullPath = Storage::disk('public')->path($filePath);
+        $categoryName = $letterRequest->category ? $letterRequest->category->nama_kategori : 'Surat';
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+        $downloadName = str_replace(' ', '_', $categoryName) . '_Pengantar_' . $letterRequest->id . '.' . $ext;
+
+        return response()->download($fullPath, $downloadName);
     }
 }
