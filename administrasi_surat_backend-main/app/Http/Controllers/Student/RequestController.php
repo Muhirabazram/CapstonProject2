@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LetterRequest;
 use App\Models\LetterRequestValue;
 use App\Models\LetterRequestRequirement;
+use App\Services\DocumentGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;

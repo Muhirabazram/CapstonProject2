@@ -145,10 +145,10 @@ export default function FormPengajuan() {
       return '.jpg,.jpeg,.png,image/jpeg,image/png'
     }
     if (tf.includes('PDF')) {
-      return '.pdf,.docx,.doc'
+      return '.pdf,application/pdf'
     }
     if (tf.includes('DOC')) {
-      return '.docx,.doc,.pdf'
+      return '.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword'
     }
     return '.pdf,.docx,.doc,.jpg,.jpeg,.png'
   }
@@ -179,13 +179,13 @@ export default function FormPengajuan() {
               valid = false
             }
           } else if (tf.includes('PDF')) {
-            if (!['pdf', 'docx', 'doc'].includes(ext)) {
-              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file PDF atau DOCX`
+            if (ext !== 'pdf') {
+              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file PDF (.pdf)`
               valid = false
             }
           } else if (tf.includes('DOC')) {
-            if (!['docx', 'doc', 'pdf'].includes(ext)) {
-              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file DOCX atau PDF`
+            if (!['docx', 'doc'].includes(ext)) {
+              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file Word (.docx atau .doc)`
               valid = false
             }
           }
