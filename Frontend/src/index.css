@@ -26,18 +26,18 @@
     --bg-primary: #0a1929;
     --bg-secondary: #102a43;
     --bg-tertiary: #1e3a5f;
-    --text-primary: #d9e2ec;
-    --text-secondary: #9fb3c8;
-    --text-muted: #627d98;
+    --text-primary: #e2e8f0;
+    --text-secondary: #b0bec5;
+    --text-muted: #90a4ae;
     --border-color: #243b53;
     --border-subtle: #1e3a5f;
-    --accent-primary: #2e6099;
-    --accent-hover: #1e3a5f;
+    --accent-primary: #4a90d9;
+    --accent-hover: #3a7bc8;
     --sidebar-bg: #0f172a;
     --sidebar-border: #1e3a5f;
     --card-bg: #102a43;
     --input-bg: #0f172a;
-    --input-border: #334e68;
+    --input-border: #455a64;
     --overlay: rgba(0, 0, 0, 0.6);
   }
 

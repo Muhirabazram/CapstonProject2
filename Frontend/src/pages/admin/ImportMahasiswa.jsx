@@ -515,42 +515,42 @@ export default function ImportMahasiswa() {
               </thead>
               <tbody>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>NIM</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>NIM</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nomor Induk Mahasiswa</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>1224014</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Nama</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Nama</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nama lengkap mahasiswa</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Budi Santoso</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Prodi</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Prodi</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Program Studi</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Teknik Informatika</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Angkatan</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Angkatan</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Tahun angkatan</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>2024</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Jenis Kelamin</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Jenis Kelamin</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Laki-laki atau Perempuan</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Laki-laki</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Jenis Mahasiswa</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Jenis Mahasiswa</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Reguler atau Kelas Karyawan</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>Reguler</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>No HP</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>No HP</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Nomor HP / Whatsapp</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>08123456789</td>
                 </tr>
                 <tr>
-                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: '#2e6099' }}>Email</td>
+                  <td className="py-2 pr-4 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>Email</td>
                   <td className="py-2 pr-4" style={{ color: 'var(--text-primary)' }}>Alamat Email Mahasiswa</td>
                   <td className="py-2 font-mono" style={{ color: 'var(--text-secondary)' }}>mahasiswa@example.com</td>
                 </tr>

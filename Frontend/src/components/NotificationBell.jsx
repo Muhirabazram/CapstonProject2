@@ -85,48 +85,48 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
       let title = ''
       let message = ''
       let icon = FileText
-      let iconColor = 'text-blue-500'
-      let bgColor = 'bg-blue-50 dark:bg-blue-900/20'
+      let iconColor = 'text-blue-500 dark:text-blue-400'
+      let bgColor = 'bg-blue-50 dark:bg-blue-900/30'
 
       if (role === 'admin') {
         title = 'Permohonan Surat Baru'
         message = `${mhsName} mengajukan ${categoryName} (${reqCode})`
         icon = Clock
-        iconColor = 'text-amber-500'
-        bgColor = 'bg-amber-50 dark:bg-amber-900/20'
+        iconColor = 'text-amber-500 dark:text-amber-400'
+        bgColor = 'bg-amber-50 dark:bg-amber-900/30'
       } else {
         if (req.status === 'selesai') {
-          title = 'Surat Anda Selesai! 🎉'
+          title = 'Surat Anda Selesai!'
           message = `Dokumen ${categoryName} (${reqCode}) siap diunduh.`
           icon = CheckCircle2
-          iconColor = 'text-emerald-500'
-          bgColor = 'bg-emerald-50 dark:bg-emerald-900/20'
+          iconColor = 'text-emerald-500 dark:text-emerald-400'
+          bgColor = 'bg-emerald-50 dark:bg-emerald-900/30'
         } else if (req.status === 'ditolak') {
-          title = 'Permohonan Ditolak ⚠️'
+          title = 'Permohonan Ditolak'
           message = req.alasan_penolakan 
             ? `Ditolak: "${req.alasan_penolakan}"` 
             : `Permohonan ${categoryName} (${reqCode}) ditolak admin.`
           icon = XCircle
-          iconColor = 'text-red-500'
-          bgColor = 'bg-red-50 dark:bg-red-900/20'
+          iconColor = 'text-red-500 dark:text-red-400'
+          bgColor = 'bg-red-50 dark:bg-red-900/30'
         } else if (req.status === 'diproses') {
           title = 'Surat Sedang Diproses'
           message = `Permohonan ${categoryName} (${reqCode}) sedang diproses admin.`
           icon = Clock
-          iconColor = 'text-blue-500'
-          bgColor = 'bg-blue-50 dark:bg-blue-900/20'
+          iconColor = 'text-blue-500 dark:text-blue-400'
+          bgColor = 'bg-blue-50 dark:bg-blue-900/30'
         } else if (req.status === 'diterima') {
           title = 'Permohonan Diterima'
           message = `Permohonan ${categoryName} (${reqCode}) telah diterima.`
           icon = CheckCircle2
-          iconColor = 'text-sky-500'
-          bgColor = 'bg-sky-50 dark:bg-sky-900/20'
+          iconColor = 'text-sky-500 dark:text-sky-400'
+          bgColor = 'bg-sky-50 dark:bg-sky-900/30'
         } else {
           title = 'Pengajuan Terkirim'
           message = `Permohonan ${categoryName} (${reqCode}) berhasil diajukan.`
           icon = Clock
-          iconColor = 'text-amber-500'
-          bgColor = 'bg-amber-50 dark:bg-amber-900/20'
+          iconColor = 'text-amber-500 dark:text-amber-400'
+          bgColor = 'bg-amber-50 dark:bg-amber-900/30'
         }
       }
 
@@ -220,7 +220,7 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
           <div className="max-h-[380px] overflow-y-auto divide-y" style={{ borderColor: 'var(--border-color)' }}>
             {notifications.length === 0 ? (
               <div className="py-10 text-center px-4">
-                <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-500" />
                 <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Belum ada notifikasi baru</p>
               </div>
             ) : (

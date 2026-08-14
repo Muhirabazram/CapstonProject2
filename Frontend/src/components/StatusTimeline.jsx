@@ -44,7 +44,7 @@ export default function StatusTimeline({ currentStatus }) {
               )}
             </div>
             <div className="pb-6">
-              <p className={`text-sm font-medium ${isDone ? 'text-navy-800 dark:text-navy-100' : 'text-navy-300 dark:text-navy-600'}`}>
+              <p className={`text-sm font-medium ${isDone ? 'text-navy-800 dark:text-navy-100' : 'text-navy-300 dark:text-navy-400'}`}>
                 {step.label}
               </p>
               {isNeo && isCurrent && (

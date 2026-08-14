@@ -166,7 +166,7 @@ export default function DocumentPreviewModal({
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base truncate">{title}</h3>
-              {filename && <p className="text-xs text-slate-400 truncate">{filename}</p>}
+              {filename && <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{filename}</p>}
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export default function DocumentPreviewModal({
               </button>
             )}
 
-            <button type="button" onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button type="button" onClick={onClose} className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -213,7 +213,7 @@ export default function DocumentPreviewModal({
           {loading && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 space-y-3">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <p className="text-sm font-medium text-slate-500">Memuat preview dokumen...</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Memuat preview dokumen...</p>
             </div>
           )}
 
@@ -223,7 +223,7 @@ export default function DocumentPreviewModal({
               <div className="flex flex-col items-center space-y-3 p-8 bg-white dark:bg-slate-900 rounded-2xl border border-red-200 dark:border-red-900/50 max-w-md text-center">
                 <AlertCircle className="w-10 h-10 text-red-500" />
                 <p className="font-semibold text-red-600 dark:text-red-400">{error}</p>
-                <p className="text-xs text-slate-400">Silakan gunakan tombol Unduh untuk mengunduh dokumen.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Silakan gunakan tombol Unduh untuk mengunduh dokumen.</p>
               </div>
             </div>
           )}

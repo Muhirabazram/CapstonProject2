@@ -58,7 +58,7 @@ export default function Modal({ open, onClose, title, children, wide }) {
             <button
               onClick={onClose}
               className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'var(--text-secondary)' }}
               aria-label="Tutup"
             >
               <X className="w-4 h-4" />
@@ -70,7 +70,7 @@ export default function Modal({ open, onClose, title, children, wide }) {
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'var(--text-secondary)' }}
               aria-label="Tutup"
             >
               <X className="w-4 h-4" />

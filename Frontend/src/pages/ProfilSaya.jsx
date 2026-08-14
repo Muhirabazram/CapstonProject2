@@ -95,7 +95,7 @@ export default function ProfilSaya() {
   const passwordSection = (
     <form onSubmit={handleChangePassword} className="card p-6 space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <Lock className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+        <Lock className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
         <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Ubah Password</h3>
       </div>
 
@@ -110,7 +110,7 @@ export default function ProfilSaya() {
             placeholder="Masukkan password saat ini"
             required
           />
-          <button type="button" onClick={() => setShowPw({ ...showPw, current: !showPw.current })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+          <button type="button" onClick={() => setShowPw({ ...showPw, current: !showPw.current })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
             {showPw.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function ProfilSaya() {
               required
               minLength={6}
             />
-            <button type="button" onClick={() => setShowPw({ ...showPw, new: !showPw.new })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+            <button type="button" onClick={() => setShowPw({ ...showPw, new: !showPw.new })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
               {showPw.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -145,7 +145,7 @@ export default function ProfilSaya() {
               placeholder="Ulangi password baru"
               required
             />
-            <button type="button" onClick={() => setShowPw({ ...showPw, confirm: !showPw.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+            <button type="button" onClick={() => setShowPw({ ...showPw, confirm: !showPw.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
               {showPw.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>

@@ -82,7 +82,7 @@ export default function Sidebar({ role, open, onClose }) {
             <button
               onClick={onClose}
               className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'var(--text-secondary)' }}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
