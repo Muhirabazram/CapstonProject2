@@ -104,10 +104,13 @@ class RequestController extends Controller
                 }
             }
 
+            // Auto generate Surat Permohonan upon submission
+            DocumentGeneratorService::generatePermohonan($letterRequest);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Pengajuan surat berhasil dikirim.',
-                'data' => $letterRequest->load(['category', 'values.variable', 'requestRequirements.requirement']),
+                'data' => $letterRequest->fresh(['category', 'values.variable', 'requestRequirements.requirement']),
             ], 201);
         });
     }

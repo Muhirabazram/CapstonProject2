@@ -11,30 +11,65 @@ use Exception;
 class DocumentGeneratorService
 {
     /**
-     * Generate filled .docx letter dynamically based on category template file
-     *
-     * @param LetterRequest $letterRequest
-     * @return string|null Relative storage path of generated file, or null if template not found
+     * Generate filled .docx letter for Permohonan or Pengantar
+     */
+    public static function generatePermohonan(LetterRequest $letterRequest): ?string
+    {
+        $letterRequest->loadMissing(['category']);
+        $category = $letterRequest->category;
+        $templatePath = $category?->file_template_permohonan_path ?: $category?->file_template_path;
+        
+        $generatedPath = self::processTemplate($letterRequest, $templatePath, 'permohonan', true);
+        if ($generatedPath) {
+            $letterRequest->file_permohonan_path = $generatedPath;
+            $letterRequest->save();
+        }
+        return $generatedPath;
+    }
+
+    public static function generatePengantar(LetterRequest $letterRequest): ?string
+    {
+        $letterRequest->loadMissing(['category']);
+        $category = $letterRequest->category;
+        $templatePath = $category?->file_template_pengantar_path ?: $category?->file_template_path;
+
+        $generatedPath = self::processTemplate($letterRequest, $templatePath, 'pengantar', false);
+        if ($generatedPath) {
+            $letterRequest->file_hasil_path = $generatedPath;
+            $letterRequest->save();
+        }
+        return $generatedPath;
+    }
+
+    /**
+     * Legacy alias for generate
      */
     public static function generate(LetterRequest $letterRequest): ?string
     {
+        return self::generatePengantar($letterRequest);
+    }
+
+    /**
+     * Helper to process docx template processor
+     */
+    private static function processTemplate(LetterRequest $letterRequest, ?string $templateRelativePath, string $prefix = 'surat', bool $includeSignature = true): ?string
+    {
+        if (!$templateRelativePath) {
+            return null;
+        }
+
         $letterRequest->loadMissing([
             'category',
             'mahasiswa',
             'values.variable',
         ]);
 
-        $category = $letterRequest->category;
-        if (!$category || !$category->file_template_path) {
-            return null;
-        }
-
         $disk = Storage::disk('public');
-        if (!$disk->exists($category->file_template_path)) {
+        if (!$disk->exists($templateRelativePath)) {
             return null;
         }
 
-        $templateFullPath = $disk->path($category->file_template_path);
+        $templateFullPath = $disk->path($templateRelativePath);
 
         try {
             $templateProcessor = new TemplateProcessor($templateFullPath);
@@ -107,8 +142,8 @@ class DocumentGeneratorService
                 $varLower = strtolower(trim($varName));
 
                 if (in_array($varLower, $sigKeys, true)) {
-                    // Inject signature image if available
-                    $sigRelPath = $letterRequest->file_ttd_digital_path;
+                    // Inject signature image if available and enabled for this letter type (Surat Permohonan)
+                    $sigRelPath = $includeSignature ? $letterRequest->file_ttd_digital_path : null;
                     $sigFullPath = null;
 
                     if ($sigRelPath) {
@@ -136,7 +171,6 @@ class DocumentGeneratorService
                     if (array_key_exists($varLower, $lowerMap)) {
                         $templateProcessor->setValue($varName, (string)$lowerMap[$varLower]);
                     } else {
-                        // Leave empty or keep placeholder if no value provided
                         $templateProcessor->setValue($varName, '');
                     }
                 }
@@ -147,7 +181,7 @@ class DocumentGeneratorService
                 $disk->makeDirectory('generated_letters');
             }
 
-            $outputFilename = 'surat_' . $letterRequest->id . '_' . time() . '.docx';
+            $outputFilename = $prefix . '_' . $letterRequest->id . '_' . time() . '.docx';
             $relativeOutputPath = 'generated_letters/' . $outputFilename;
             $fullOutputPath = $disk->path($relativeOutputPath);
 

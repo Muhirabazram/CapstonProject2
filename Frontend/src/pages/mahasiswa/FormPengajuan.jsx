@@ -1,5 +1,5 @@
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, FileText, Send } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { AlertCircle, ArrowLeft, ArrowRight, Award, CheckCircle, FileText, GraduationCap, Send } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Modal from '../../components/Modal'
@@ -48,6 +48,32 @@ export default function FormPengajuan() {
       }
     }).catch(() => { }).finally(() => setLoading(false))
   }, [reapplyReq])
+
+  const groupedCategories = useMemo(() => {
+    const groups = {
+      'Akademik': {
+        icon: GraduationCap,
+        badgeColor: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+        iconColor: 'text-blue-600 dark:text-blue-400',
+        scope: 'Mencakup surat mahasiswa aktif, penelitian, KP, dan semua jenis magang',
+        items: []
+      },
+      'Kemahasiswaan': {
+        icon: Award,
+        badgeColor: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        scope: 'Mencakup surat keterangan beasiswa',
+        items: []
+      }
+    }
+
+    categories.forEach((cat) => {
+      const g = cat.grup_kategori === 'Kemahasiswaan' ? 'Kemahasiswaan' : 'Akademik'
+      groups[g].items.push(cat)
+    })
+
+    return groups
+  }, [categories])
 
   const handleCategoryChange = (catId) => {
     const cat = categories.find((c) => c.id === parseInt(catId))
@@ -105,6 +131,28 @@ export default function FormPengajuan() {
     return true
   }
 
+  const formatTipeFile = (tipeFile) => {
+    const tf = (tipeFile || '').toUpperCase()
+    if (tf === 'JPG' || tf === 'PNG' || tf === 'JPEG' || tf === 'JPG/PNG') {
+      return 'JPG/PNG'
+    }
+    return tf || 'PDF'
+  }
+
+  const getAcceptAttribute = (tipeFile) => {
+    const tf = (tipeFile || '').toUpperCase()
+    if (tf.includes('JPG') || tf.includes('PNG') || tf.includes('IMAGE')) {
+      return '.jpg,.jpeg,.png,image/jpeg,image/png'
+    }
+    if (tf.includes('PDF')) {
+      return '.pdf,.docx,.doc'
+    }
+    if (tf.includes('DOC')) {
+      return '.docx,.doc,.pdf'
+    }
+    return '.pdf,.docx,.doc,.jpg,.jpeg,.png'
+  }
+
   const validateStep2 = () => {
     const newErrors = {}
     let valid = true
@@ -117,10 +165,30 @@ export default function FormPengajuan() {
       })
 
       ; (selectedCat.requirements || []).forEach((r) => {
+        const file = files[r.id]
         const hasOld = reapplyReq?.request_requirements?.some((oldR) => oldR.requirement_id === r.id && oldR.file_path)
-        if (!files[r.id] && !hasOld) {
+        if (!file && !hasOld) {
           newErrors[`req_${r.id}`] = `${r.nama_syarat} wajib diupload`
           valid = false
+        } else if (file) {
+          const ext = file.name.split('.').pop()?.toLowerCase() || ''
+          const tf = (r.tipe_file || '').toUpperCase()
+          if (tf.includes('JPG') || tf.includes('PNG') || tf.includes('IMAGE')) {
+            if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file gambar (JPG, JPEG, atau PNG)`
+              valid = false
+            }
+          } else if (tf.includes('PDF')) {
+            if (!['pdf', 'docx', 'doc'].includes(ext)) {
+              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file PDF atau DOCX`
+              valid = false
+            }
+          } else if (tf.includes('DOC')) {
+            if (!['docx', 'doc', 'pdf'].includes(ext)) {
+              newErrors[`req_${r.id}`] = `${r.nama_syarat} harus berupa file DOCX atau PDF`
+              valid = false
+            }
+          }
         }
       })
 
@@ -131,7 +199,7 @@ export default function FormPengajuan() {
     }
 
     setErrors(newErrors)
-    if (!valid) toast.error('Lengkapi semua data yang wajib diisi')
+    if (!valid) toast.error('Lengkapi semua data dan periksa kembali format dokumen Anda')
     return valid
   }
 
@@ -215,7 +283,7 @@ export default function FormPengajuan() {
   const hasRequirements = selectedCat && (selectedCat.requirements || []).length > 0
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 w-full max-w-6xl">
       {/* Header */}
       <div>
         <h2 className="page-title">Buat Pengajuan Surat</h2>
@@ -246,8 +314,8 @@ export default function FormPengajuan() {
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step >= s.num
-                    ? 'bg-primary text-white'
-                    : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
+                  ? 'bg-primary text-white'
+                  : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
                   }`}>
                   {step > s.num ? <CheckCircle className="w-4 h-4" /> : s.num}
                 </div>
@@ -265,22 +333,68 @@ export default function FormPengajuan() {
 
       {/* Step 1: Category Selection */}
       {step === 1 && (
-        <div className="card p-6 space-y-4">
-          <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Pilih Kategori Surat</h3>
-          <select
-            value={selectedCat?.id || ''}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="select-base"
-          >
-            <option value="">-- Pilih Jenis Surat --</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.nama_kategori}</option>
-            ))}
-          </select>
+        <div className="space-y-5">
+
+          {/* Visual 2-Column Group Cards Grid (No Dropdown) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {Object.entries(groupedCategories).map(([groupName, groupData]) => {
+              const Icon = groupData.icon
+              return (
+                <div key={groupName} className="card p-5 space-y-4 h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between border-b pb-3" style={{ borderColor: 'var(--border-color)' }}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-lg ${groupData.badgeColor}`}>
+                          <Icon className={`w-4 h-4 ${groupData.iconColor}`} />
+                        </div>
+                        <h4 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{groupName}</h4>
+                      </div>
+                      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${groupData.badgeColor}`}>
+                        {groupData.items.length} jenis
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2.5 pt-3">
+                      {groupData.items.map((cat) => {
+                        const isSelected = selectedCat?.id === cat.id
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setSelectedCat(cat)}
+                            className={`p-4 rounded-xl border text-left transition-all flex items-start justify-between gap-3 ${isSelected
+                                ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm'
+                                : 'border-navy-200 dark:border-navy-700 hover:border-primary/50 hover:bg-navy-50/50 dark:hover:bg-navy-800/50'
+                              }`}
+                          >
+                            <div className="space-y-1">
+                              <p className={`text-sm font-semibold ${isSelected ? 'text-primary' : ''}`} style={{ color: isSelected ? undefined : 'var(--text-primary)' }}>
+                                {cat.nama_kategori}
+                              </p>
+                              {cat.deskripsi && (
+                                <p className="text-xs line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                                  {cat.deskripsi}
+                                </p>
+                              )}
+                            </div>
+                            {isSelected && <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
+                          </button>
+                        )
+                      })}
+                      {groupData.items.length === 0 && (
+                        <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>Belum ada jenis surat pada kategori ini.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           {selectedCat && (
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-2">
               <button onClick={handleNext} className="btn-primary flex items-center gap-2">
-                Selanjutnya <ArrowRight className="w-4 h-4" />
+                Lanjutkan Isi Formulir <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -337,15 +451,18 @@ export default function FormPengajuan() {
               )}
               <ul className="text-xs list-disc list-inside space-y-1" style={{ color: 'var(--text-muted)' }}>
                 {selectedCat.requirements.map((r) => (
-                  <li key={r.id}>{r.nama_syarat} ({r.tipe_file})</li>
+                  <li key={r.id}>{r.nama_syarat} ({formatTipeFile(r.tipe_file)})</li>
                 ))}
               </ul>
               {selectedCat.requirements.map((r) => {
                 const oldReqFile = reapplyReq?.request_requirements?.find((oldR) => oldR.requirement_id === r.id)
+                const displayFormat = formatTipeFile(r.tipe_file)
+                const acceptAttr = getAcceptAttribute(r.tipe_file)
+                const formatHint = displayFormat
                 return (
                   <div key={r.id} className="space-y-1">
                     <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Upload {r.nama_syarat} <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(Maks. 10MB)</span>
+                      Upload {r.nama_syarat} <span className="font-normal text-xs" style={{ color: 'var(--text-muted)' }}>({formatHint}, Maks. 10MB)</span>
                     </label>
                     {oldReqFile?.file_path && !files[r.id] && (
                       <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -354,7 +471,7 @@ export default function FormPengajuan() {
                     )}
                     <input
                       type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.docx"
+                      accept={acceptAttr}
                       onChange={(e) => handleFileChange(r.id, e.target.files[0])}
                       className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors[`req_${r.id}`] ? 'file:bg-red-500' : ''}`}
                     />
@@ -377,7 +494,7 @@ export default function FormPengajuan() {
                 <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs">Wajib</span>
               </div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Unggah file gambar tanda tangan digital Anda (Format: PNG atau JPG, Maks 5MB). File ini akan disisipkan ke dalam dokumen surat.
+                Unggah file gambar tanda tangan digital Anda (Format: PNG atau JPG, Maks 5MB). File ini akan otomatis disisipkan ke dalam <strong>Surat Permohonan</strong> yang Anda ajukan.
               </p>
               {reapplyReq?.file_ttd_digital_path && !ttdFile && (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">

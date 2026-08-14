@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../../api/axios'
 import Modal from '../../components/Modal'
 import DocumentPreviewModal from '../../components/DocumentPreviewModal'
@@ -7,7 +7,7 @@ import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Eye, Download, Search, Filter, FileText, RotateCcw } from 'lucide-react'
+import { Eye, Download, Search, Filter, FileText, RotateCcw, Calendar, X } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -29,6 +29,10 @@ export default function KelolaPengajuan() {
   const [detailError, setDetailError] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
+  const [categoriesList, setCategoriesList] = useState([])
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
   const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
 
@@ -49,12 +53,43 @@ export default function KelolaPengajuan() {
         setRefreshing(false)
       })
   }
-  useEffect(() => { fetchRequests() }, [])
+  useEffect(() => {
+    fetchRequests()
+    api.get('/admin/categories').then((r) => {
+      setCategoriesList(r.data.data || [])
+    }).catch(() => {})
+  }, [])
+
+  const availableCategories = useMemo(() => {
+    const catsMap = new Map()
+    categoriesList.forEach((c) => {
+      catsMap.set(String(c.id), c.nama_kategori)
+    })
+    requests.forEach((r) => {
+      if (r.category) {
+        catsMap.set(String(r.category.id), r.category.nama_kategori)
+      }
+    })
+    return Array.from(catsMap.entries()).map(([id, name]) => ({ id, name }))
+  }, [categoriesList, requests])
 
   const filtered = requests.filter((r) => {
-    const matchSearch = !search || r.mahasiswa?.nama?.toLowerCase().includes(search.toLowerCase()) || r.mahasiswa?.nim?.includes(search) || r.category?.nama_kategori?.toLowerCase().includes(search.toLowerCase())
+    const categoryName = r.category?.nama_kategori || ''
+    const matchSearch = !search || r.mahasiswa?.nama?.toLowerCase().includes(search.toLowerCase()) || r.mahasiswa?.nim?.includes(search) || categoryName.toLowerCase().includes(search.toLowerCase())
     const matchStatus = !filterStatus || r.status === filterStatus
-    return matchSearch && matchStatus
+    const matchCategory = !filterCategory || String(r.category_id) === String(filterCategory) || categoryName === filterCategory
+
+    const rDateStr = r.tanggal_pengajuan ? r.tanggal_pengajuan.split('T')[0] : (r.created_at ? r.created_at.split('T')[0] : '')
+    let matchDate = true
+    if (startDate && endDate) {
+      matchDate = rDateStr >= startDate && rDateStr <= endDate
+    } else if (startDate) {
+      matchDate = rDateStr === startDate
+    } else if (endDate) {
+      matchDate = rDateStr === endDate
+    }
+
+    return matchSearch && matchStatus && matchCategory && matchDate
   })
 
   const openDetail = (req) => {
@@ -116,22 +151,60 @@ export default function KelolaPengajuan() {
     try {
       const response = await api.get(`/documents/download/${req.id}`, { responseType: 'blob' })
       if (response.data.size === 0) throw new Error('File kosong')
-      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Resmi_${req.id}.docx`
+      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Pengantar_${req.id}.docx`
       setPreviewModal({
         open: true,
         blob: response.data,
         filename,
-        title: `Surat Resmi - ${req.user?.name || req.category?.nama_kategori || 'Pengajuan'}`,
+        title: `Surat Pengantar - ${req.user?.name || req.category?.nama_kategori || 'Pengajuan'}`,
         reqId: req.id
       })
     } catch {
-      toast.error('Gagal memuat preview surat resmi.')
+      toast.error('Gagal memuat preview surat pengantar.')
+    }
+  }
+
+  const handleDownloadPermohonan = async (id, customFilename = '') => {
+    try {
+      const response = await api.get(`/documents/permohonan/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = customFilename || `Surat_Permohonan_${id}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Gagal mengunduh surat permohonan')
+    }
+  }
+
+  const handlePreviewPermohonan = async (req) => {
+    try {
+      const response = await api.get(`/documents/permohonan/${req.id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const filename = req.file_permohonan_path ? req.file_permohonan_path.split('/').pop() : `Surat_Permohonan_${req.id}.docx`
+      setPreviewModal({
+        open: true,
+        blob: response.data,
+        filename,
+        title: `Surat Permohonan - ${req.mahasiswa?.nama || req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id
+      })
+    } catch {
+      toast.error('Gagal memuat preview surat permohonan.')
     }
   }
 
 
   const handleUpdateStatus = async () => {
     if (!selected || !newStatus) return
+    if (selected.status === 'selesai') {
+      toast.error('Pengajuan yang sudah Selesai tidak dapat diubah lagi.')
+      return
+    }
     if ((newStatus === 'selesai' || newStatus === 'ditolak') && newStatus !== selected.status) {
       if (newStatus === 'ditolak' && !alasanPenolakan.trim()) {
         setDetailError('Harap tuliskan alasan penolakan pengajuan.')
@@ -144,6 +217,10 @@ export default function KelolaPengajuan() {
   }
 
   const doUpdateStatus = async () => {
+    if (selected?.status === 'selesai') {
+      toast.error('Pengajuan yang sudah Selesai tidak dapat diubah lagi.')
+      return
+    }
     setShowConfirm(false)
     setSaving(true)
     setDetailError('')
@@ -197,36 +274,80 @@ export default function KelolaPengajuan() {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-base pl-10"
-            placeholder="Cari nama, NPM, atau kategori..."
-          />
+      <div className="card p-4 space-y-3">
+        <div className="flex flex-col md:flex-row gap-3 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-base pl-10"
+              placeholder="Cari nama, NPM, atau kategori..."
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="select-base w-full sm:w-48">
+              <option value="">Semua Kategori Surat</option>
+              {availableCategories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-40">
+              <option value="">Semua Status</option>
+              <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
+              <option value="diterima">Diterima ({statusCounts.diterima})</option>
+              <option value="diproses">Diproses ({statusCounts.diproses})</option>
+              <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
+              <option value="selesai">Selesai ({statusCounts.selesai})</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => fetchRequests(true)}
+              disabled={refreshing || loading}
+              className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
+              title="Refresh Data Pengajuan"
+            >
+              <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-44">
-            <option value="">Semua Status</option>
-            <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
-            <option value="diterima">Diterima ({statusCounts.diterima})</option>
-            <option value="diproses">Diproses ({statusCounts.diproses})</option>
-            <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
-            <option value="selesai">Selesai ({statusCounts.selesai})</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => fetchRequests(true)}
-            disabled={refreshing || loading}
-            className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
-            title="Refresh Data Pengajuan"
-          >
-            <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
+
+        {/* Date Filter Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs" style={{ borderTop: '1px solid var(--border-color)' }}>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 font-semibold shrink-0" style={{ color: 'var(--text-secondary)' }}>
+              <Calendar className="w-4 h-4 text-primary" />
+              <span>Filter Tanggal:</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input-base text-xs py-1.5 px-2.5 w-36"
+                title="Dari Tanggal"
+              />
+              <span style={{ color: 'var(--text-muted)' }}>s/d</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-base text-xs py-1.5 px-2.5 w-36"
+                title="Sampai Tanggal"
+              />
+            </div>
+          </div>
+          {(startDate || endDate) && (
+            <button
+              type="button"
+              onClick={() => { setStartDate(''); setEndDate('') }}
+              className="text-xs text-red-500 hover:underline flex items-center gap-1 font-medium shrink-0"
+            >
+              <X className="w-3.5 h-3.5" /> Reset Tanggal
+            </button>
+          )}
         </div>
       </div>
 
@@ -259,7 +380,9 @@ export default function KelolaPengajuan() {
                       <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{req.mahasiswa?.nama || '-'}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{req.mahasiswa?.nim || ''}</p>
                     </td>
-                    <td className="px-6 py-3 hidden md:table-cell" style={{ color: 'var(--text-secondary)' }}>{req.category?.nama_kategori || '-'}</td>
+                    <td className="px-6 py-3 hidden md:table-cell" style={{ color: 'var(--text-secondary)' }}>
+                      {req.category?.nama_kategori || '-'}
+                    </td>
                     <td className="px-6 py-3 hidden lg:table-cell" style={{ color: 'var(--text-muted)' }}>{formatDate(req.tanggal_pengajuan)}</td>
                     <td className="px-6 py-3"><StatusBadge status={req.status} /></td>
                     <td className="px-6 py-3">
@@ -300,7 +423,9 @@ export default function KelolaPengajuan() {
               </div>
               <div>
                 <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Kategori</p>
-                <p style={{ color: 'var(--text-primary)' }}>{selected.category?.nama_kategori || '-'}</p>
+                <p style={{ color: 'var(--text-primary)' }}>
+                  {selected.category?.nama_kategori || '-'}
+                </p>
               </div>
               <div>
                 <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Status</p>
@@ -388,13 +513,47 @@ export default function KelolaPengajuan() {
               <div className="rounded-xl p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 text-xs border border-amber-200 dark:border-amber-800">
                 ⚠️ Mahasiswa belum mengunggah TTD Digital pada pengajuan ini.
               </div>
-            ) : null}
+            ) : null}            {/* Surat Permohonan */}
+            <div className="space-y-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+              <h4 className="section-title">Surat Permohonan (Dari Mahasiswa)</h4>
+              <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    {selected.file_permohonan_path ? selected.file_permohonan_path.split('/').pop() : `Surat_Permohonan_${selected.id}.docx`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePreviewPermohonan(selected)}
+                    className="btn-ghost btn-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 flex items-center gap-1"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPermohonan(selected.id, `Surat_Permohonan_${selected.id}.docx`)}
+                    className="btn-ghost btn-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Unduh
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            {/* Result File */}
+            {/* Surat Pengantar (Hasil ACC) */}
             {selected.file_hasil_path && (
-              <div className="space-y-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                <h4 className="section-title">Surat Resmi</h4>
-                <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="section-title">Surat Pengantar (Surat Resmi ACC)</h4>
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
+                    ✓ Surat Pengantar telah diberikan ke Mahasiswa
+                  </span>
+                </div>
+                <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{selected.file_hasil_path.split('/').pop()}</span>
@@ -429,71 +588,88 @@ export default function KelolaPengajuan() {
             )}
 
             {/* Status Update */}
-            <div className="space-y-3" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-              <h4 className="section-title">Update Status</h4>
-              {detailError && (
-                <div className="px-4 py-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
-                  {detailError}
+            {selected.status === 'selesai' ? (
+              <div className="space-y-3" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔒</span>
+                    <span>Pengajuan ini telah berstatus <strong>Selesai</strong>. Status tidak dapat diubah lagi.</span>
+                  </div>
                 </div>
-              )}
-              <select
-                value={newStatus}
-                onChange={(e) => { setNewStatus(e.target.value); setDetailError(''); setFileSurat(null) }}
-                className="select-base"
-              >
-                <option value="diajukan">Diajukan</option>
-                <option value="diproses">Diproses</option>
-                <option value="diterima">Diterima</option>
-                <option value="selesai">Selesai</option>
-                <option value="ditolak">Ditolak</option>
-              </select>
-            </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <h4 className="section-title">Update Status</h4>
+                  {detailError && (
+                    <div className="px-4 py-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
+                      {detailError}
+                    </div>
+                  )}
+                  <select
+                    value={newStatus}
+                    onChange={(e) => { setNewStatus(e.target.value); setDetailError(''); setFileSurat(null) }}
+                    className="select-base"
+                  >
+                    <option value="diajukan">Diajukan</option>
+                    <option value="diproses">Diproses</option>
+                    <option value="diterima">Diterima</option>
+                    <option value="selesai">Selesai</option>
+                    <option value="ditolak">Ditolak</option>
+                  </select>
+                </div>
 
-            {newStatus === 'selesai' && (
-              <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-                <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">File Surat Resmi (Opsional)</p>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-3">
-                  Jika tidak di-upload, surat akan **otomatis dibuat dan terisi** dari template .docx kategori. Jika ingin mengunggah file manual, pilih file di bawah (.docx/.pdf, Maks 20MB).
-                </p>
-                <input
-                  type="file"
-                  accept=".docx,.doc,.pdf"
-                  onChange={(e) => { setFileSurat(e.target.files[0]); setDetailError('') }}
-                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
-                />
-                {fileSurat && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
-                    File manual dipilih: {fileSurat.name} ({(fileSurat.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
+                {newStatus === 'selesai' && (
+                  <div className="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">File Surat Resmi (Opsional)</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-3">
+                      Jika tidak di-upload, surat akan **otomatis dibuat dan terisi** dari template .docx kategori. Jika ingin mengunggah file manual, pilih file di bawah (.docx/.pdf, Maks 20MB).
+                    </p>
+                    <input
+                      type="file"
+                      accept=".docx,.doc,.pdf"
+                      onChange={(e) => { setFileSurat(e.target.files[0]); setDetailError('') }}
+                      className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                    />
+                    {fileSurat && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                        File manual dipilih: {fileSurat.name} ({(fileSurat.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
+
+                {newStatus === 'ditolak' && (
+                  <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
+                    <label className="block text-sm font-medium text-red-800 dark:text-red-200">
+                      Alasan Penolakan <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={alasanPenolakan}
+                      onChange={(e) => { setAlasanPenolakan(e.target.value); setDetailError('') }}
+                      rows={3}
+                      className="input-base border-red-300 dark:border-red-700 focus:ring-red-200"
+                      placeholder="Masukkan alasan mengapa pengajuan surat ini ditolak..."
+                      required
+                    />
+                  </div>
+                )}
+              </>
             )}
 
-            {newStatus === 'ditolak' && (
-              <div className="rounded-xl p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
-                <label className="block text-sm font-medium text-red-800 dark:text-red-200">
-                  Alasan Penolakan <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={alasanPenolakan}
-                  onChange={(e) => { setAlasanPenolakan(e.target.value); setDetailError('') }}
-                  rows={3}
-                  className="input-base border-red-300 dark:border-red-700 focus:ring-red-200"
-                  placeholder="Masukkan alasan mengapa pengajuan surat ini ditolak..."
-                  required
-                />
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => { setShowDetail(false); setSelected(null) }} className="btn-ghost">Batal</button>
-              <button
-                onClick={handleUpdateStatus}
-                disabled={saving || (newStatus === selected.status && newStatus !== 'selesai')}
-                className="btn-primary"
-              >
-                {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+              <button onClick={() => { setShowDetail(false); setSelected(null) }} className="btn-ghost">
+                {selected.status === 'selesai' ? 'Tutup' : 'Batal'}
               </button>
+              {selected.status !== 'selesai' && (
+                <button
+                  onClick={handleUpdateStatus}
+                  disabled={saving || (newStatus === selected.status && newStatus !== 'selesai')}
+                  className="btn-primary"
+                >
+                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              )}
             </div>
           </div>
         )}

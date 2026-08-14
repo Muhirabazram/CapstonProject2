@@ -78,4 +78,32 @@ class DocumentController extends Controller
 
         return response()->download($fullPath, $reqName . '_' . $originalName);
     }
+
+    /**
+     * Download generated Surat Permohonan document
+     */
+    public function downloadPermohonan($id)
+    {
+        $letterRequest = LetterRequest::with('category')->findOrFail($id);
+
+        if (!$letterRequest->file_permohonan_path || !Storage::disk('public')->exists($letterRequest->file_permohonan_path)) {
+            $generated = \App\Services\DocumentGeneratorService::generatePermohonan($letterRequest);
+            if ($generated) {
+                $letterRequest->file_permohonan_path = $generated;
+                $letterRequest->save();
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Surat permohonan belum tersedia atau file tidak ditemukan.',
+                ], 404);
+            }
+        }
+
+        $fullPath = Storage::disk('public')->path($letterRequest->file_permohonan_path);
+        $categoryName = $letterRequest->category ? $letterRequest->category->nama_kategori : 'Surat';
+        $ext = pathinfo($letterRequest->file_permohonan_path, PATHINFO_EXTENSION);
+        $downloadName = str_replace(' ', '_', $categoryName) . '_Permohonan_' . $letterRequest->id . '.' . $ext;
+
+        return response()->download($fullPath, $downloadName);
+    }
 }

@@ -34,6 +34,8 @@ class CategoryController extends Controller
             'nama_kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'file_template' => 'nullable|file|mimes:docx',
+            'file_template_permohonan' => 'nullable|file|mimes:docx',
+            'file_template_pengantar' => 'nullable|file|mimes:docx',
             'ttd_digital' => 'nullable|boolean',
             'requirements' => 'nullable|array',
             'requirements.*.nama_syarat' => 'required|string',
@@ -45,16 +47,38 @@ class CategoryController extends Controller
 
         return DB::transaction(function () use ($request) {
             $templatePath = null;
+            $templatePermohonanPath = null;
+            $templatePengantarPath = null;
+
             if ($request->hasFile('file_template')) {
                 $file = $request->file('file_template');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . '_tpl_' . $file->getClientOriginalName();
                 $templatePath = $file->storeAs('templates', $filename, 'public');
+            }
+
+            if ($request->hasFile('file_template_permohonan')) {
+                $file = $request->file('file_template_permohonan');
+                $filename = time() . '_permohonan_' . $file->getClientOriginalName();
+                $templatePermohonanPath = $file->storeAs('templates', $filename, 'public');
+            } else {
+                $templatePermohonanPath = $templatePath;
+            }
+
+            if ($request->hasFile('file_template_pengantar')) {
+                $file = $request->file('file_template_pengantar');
+                $filename = time() . '_pengantar_' . $file->getClientOriginalName();
+                $templatePengantarPath = $file->storeAs('templates', $filename, 'public');
+            } else {
+                $templatePengantarPath = $templatePath;
             }
 
             $category = LetterCategory::create([
                 'nama_kategori' => $request->nama_kategori,
+                'grup_kategori' => $request->grup_kategori ?: 'Akademik',
                 'deskripsi' => $request->deskripsi,
-                'file_template_path' => $templatePath,
+                'file_template_path' => $templatePath ?: $templatePermohonanPath,
+                'file_template_permohonan_path' => $templatePermohonanPath,
+                'file_template_pengantar_path' => $templatePengantarPath,
                 'ttd_digital' => $request->boolean('ttd_digital'),
             ]);
 
@@ -108,6 +132,8 @@ class CategoryController extends Controller
             'nama_kategori' => 'sometimes|required|string|max:255',
             'deskripsi' => 'nullable|string',
             'file_template' => 'nullable|file|mimes:docx',
+            'file_template_permohonan' => 'nullable|file|mimes:docx',
+            'file_template_pengantar' => 'nullable|file|mimes:docx',
             'ttd_digital' => 'nullable',
             'requirements' => 'nullable|array',
             'variables' => 'nullable|array',
@@ -115,17 +141,37 @@ class CategoryController extends Controller
 
         return DB::transaction(function () use ($request, $category) {
             if ($request->hasFile('file_template')) {
-                // Remove old template if exists
                 if ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
                     Storage::disk('public')->delete($category->file_template_path);
                 }
                 $file = $request->file('file_template');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . '_tpl_' . $file->getClientOriginalName();
                 $category->file_template_path = $file->storeAs('templates', $filename, 'public');
+            }
+
+            if ($request->hasFile('file_template_permohonan')) {
+                if ($category->file_template_permohonan_path && Storage::disk('public')->exists($category->file_template_permohonan_path)) {
+                    Storage::disk('public')->delete($category->file_template_permohonan_path);
+                }
+                $file = $request->file('file_template_permohonan');
+                $filename = time() . '_permohonan_' . $file->getClientOriginalName();
+                $category->file_template_permohonan_path = $file->storeAs('templates', $filename, 'public');
+            }
+
+            if ($request->hasFile('file_template_pengantar')) {
+                if ($category->file_template_pengantar_path && Storage::disk('public')->exists($category->file_template_pengantar_path)) {
+                    Storage::disk('public')->delete($category->file_template_pengantar_path);
+                }
+                $file = $request->file('file_template_pengantar');
+                $filename = time() . '_pengantar_' . $file->getClientOriginalName();
+                $category->file_template_pengantar_path = $file->storeAs('templates', $filename, 'public');
             }
 
             if ($request->has('nama_kategori')) {
                 $category->nama_kategori = $request->nama_kategori;
+            }
+            if ($request->has('grup_kategori')) {
+                $category->grup_kategori = $request->grup_kategori;
             }
             if ($request->has('deskripsi')) {
                 $category->deskripsi = $request->deskripsi;
@@ -171,10 +217,7 @@ class CategoryController extends Controller
     public function destroy($id)
     {
         $category = LetterCategory::findOrFail($id);
-        if ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
-            Storage::disk('public')->delete($category->file_template_path);
-        }
-        $category->delete();
+        $category->delete(); // Soft delete category
 
         return response()->json([
             'status' => 'success',

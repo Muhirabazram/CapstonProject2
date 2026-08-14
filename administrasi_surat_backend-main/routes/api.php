@@ -62,5 +62,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document Download Routes
     Route::get('/documents/template/{id}', [DocumentController::class, 'downloadTemplate']);
     Route::get('/documents/download/{id}', [DocumentController::class, 'downloadResult']);
+    Route::get('/documents/permohonan/{id}', [DocumentController::class, 'downloadPermohonan']);
     Route::get('/documents/requirement/{id}', [DocumentController::class, 'downloadRequirement']);
 });

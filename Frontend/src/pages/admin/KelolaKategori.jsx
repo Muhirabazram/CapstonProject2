@@ -1,21 +1,34 @@
-import { useState, useEffect } from 'react'
+import { Check, Edit3, Filter, FolderOpen, Plus, Search, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
-import Modal from '../../components/Modal'
-import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import EmptyState from '../../components/EmptyState'
+import Modal from '../../components/Modal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Plus, Edit3, Trash2, FolderOpen, Check, X, GripVertical } from 'lucide-react'
+
+function formatTipeFile(tipe) {
+  if (!tipe) return 'PDF'
+  const t = tipe.toUpperCase()
+  if (t === 'JPG' || t === 'PNG' || t === 'JPG/PNG' || t === 'JPEG') return 'JPG/PNG'
+  if (t === 'DOC' || t === 'DOCX') return 'DOCX'
+  return t
+}
 
 export default function KelolaKategori() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [editCat, setEditCat] = useState(null)
-  const [form, setForm] = useState({ nama_kategori: '', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template: null })
+  const [form, setForm] = useState({ nama_kategori: '', grup_kategori: 'Akademik', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template_permohonan: null, file_template_pengantar: null })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [deleteId, setDeleteId] = useState(null)
+
+  // Filter states
+  const [filterGroup, setFilterGroup] = useState('semua')
+  const [searchQuery, setSearchQuery] = useState('')
+
   const toast = useToast()
 
   const fetchCategories = () => {
@@ -23,17 +36,42 @@ export default function KelolaKategori() {
   }
   useEffect(() => { fetchCategories() }, [])
 
-  const resetForm = () => setForm({ nama_kategori: '', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template: null })
+  const filteredCategories = useMemo(() => {
+    return categories.filter((cat) => {
+      // Filter by group
+      if (filterGroup !== 'semua') {
+        const group = cat.grup_kategori || 'Akademik'
+        if (group !== filterGroup) return false
+      }
+
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        const nameMatch = (cat.nama_kategori || '').toLowerCase().includes(query)
+        const descMatch = (cat.deskripsi || '').toLowerCase().includes(query)
+        if (!nameMatch && !descMatch) return false
+      }
+
+      return true
+    })
+  }, [categories, filterGroup, searchQuery])
+
+  const resetForm = () => setForm({ nama_kategori: '', grup_kategori: 'Akademik', deskripsi: '', ttd_digital: false, requirements: [], variables: [], file_template_permohonan: null, file_template_pengantar: null })
 
   const openAdd = () => { resetForm(); setEditCat(null); setFormError(''); setShowAdd(true) }
   const openEdit = (cat) => {
     setForm({
       nama_kategori: cat.nama_kategori,
+      grup_kategori: cat.grup_kategori || 'Akademik',
       deskripsi: cat.deskripsi || '',
       ttd_digital: !!cat.ttd_digital,
-      requirements: (cat.requirements || []).map((r) => ({ nama_syarat: r.nama_syarat, tipe_file: r.tipe_file })),
+      requirements: (cat.requirements || []).map((r) => ({
+        nama_syarat: r.nama_syarat,
+        tipe_file: (r.tipe_file === 'JPG' || r.tipe_file === 'PNG') ? 'JPG/PNG' : (r.tipe_file || 'PDF')
+      })),
       variables: (cat.variables || []).map((v) => ({ nama_variabel: v.nama_variabel, tipe_input_html: v.tipe_input_html })),
-      file_template: null,
+      file_template_permohonan: null,
+      file_template_pengantar: null,
     })
     setEditCat(cat)
     setFormError('')
@@ -54,9 +92,11 @@ export default function KelolaKategori() {
     setFormError('')
     const fd = new FormData()
     fd.append('nama_kategori', form.nama_kategori)
+    fd.append('grup_kategori', form.grup_kategori || 'Akademik')
     fd.append('deskripsi', form.deskripsi || '')
     fd.append('ttd_digital', form.ttd_digital ? '1' : '0')
-    if (form.file_template) fd.append('file_template', form.file_template)
+    if (form.file_template_permohonan) fd.append('file_template_permohonan', form.file_template_permohonan)
+    if (form.file_template_pengantar) fd.append('file_template_pengantar', form.file_template_pengantar)
     form.requirements.forEach((r, i) => {
       fd.append(`requirements[${i}][nama_syarat]`, r.nama_syarat)
       fd.append(`requirements[${i}][tipe_file]`, r.tipe_file)
@@ -112,6 +152,60 @@ export default function KelolaKategori() {
         </button>
       </div>
 
+      {/* Filter & Search Bar */}
+      <div className="card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <span className="text-xs font-semibold text-navy-600 dark:text-navy-300 whitespace-nowrap flex items-center gap-1.5 mr-1">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            Kelompok:
+          </span>
+          <button
+            type="button"
+            onClick={() => setFilterGroup('semua')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+              filterGroup === 'semua'
+                ? 'bg-primary text-white shadow-sm'
+                : 'bg-navy-50 dark:bg-navy-800 text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-700'
+            }`}
+          >
+            Semua ({categories.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterGroup('Akademik')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              filterGroup === 'Akademik'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50'
+            }`}
+          >
+            🎓 Akademik
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterGroup('Kemahasiswaan')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              filterGroup === 'Kemahasiswaan'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+            }`}
+          >
+            🏆 Kemahasiswaan
+          </button>
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari kategori..."
+            className="input-base text-xs pl-9 py-1.5 rounded-lg w-full"
+          />
+        </div>
+      </div>
+
       {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -128,19 +222,30 @@ export default function KelolaKategori() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={5} className="px-6 py-12"><SkeletonTable rows={4} cols={5} /></td></tr>
-              ) : categories.length === 0 ? (
-                <tr><td colSpan={5}><EmptyState message="Belum ada kategori surat" icon={FolderOpen} /></td></tr>
+              ) : filteredCategories.length === 0 ? (
+                <tr><td colSpan={5}><EmptyState message="Tidak ada kategori yang sesuai filter" icon={FolderOpen} /></td></tr>
               ) : (
-                categories.map((cat) => (
+                filteredCategories.map((cat) => (
                   <tr key={cat.id} className="table-row">
                     <td className="px-6 py-3">
-                      <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{cat.nama_kategori}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{cat.nama_kategori}</p>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                          cat.grup_kategori === 'Kemahasiswaan'
+                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                        }`}>
+                          {cat.grup_kategori || 'Akademik'}
+                        </span>
+                      </div>
                       {cat.deskripsi && <p className="text-xs mt-0.5 truncate max-w-[200px]" style={{ color: 'var(--text-muted)' }}>{cat.deskripsi}</p>}
                     </td>
                     <td className="px-6 py-3 hidden md:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {(cat.requirements || []).map((r, i) => (
-                          <span key={i} className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-secondary)' }}>{r.nama_syarat}</span>
+                          <span key={i} className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-secondary)' }}>
+                            {r.nama_syarat} ({formatTipeFile(r.tipe_file)})
+                          </span>
                         ))}
                         {(!cat.requirements || cat.requirements.length === 0) && <span style={{ color: 'var(--text-muted)' }}>-</span>}
                       </div>
@@ -155,13 +260,21 @@ export default function KelolaKategori() {
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex flex-col gap-1 items-start">
-                        {cat.file_template_path ? (
-                          <span className="badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                            <Check className="w-3 h-3 mr-1" />
-                            Tersedia
+                        {(cat.file_template_permohonan_path || cat.file_template_path) ? (
+                          <span className="badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                            <Check className="w-2.5 h-2.5 mr-1" />
+                            Permohonan
                           </span>
                         ) : (
-                          <span className="badge bg-navy-100 dark:bg-navy-800" style={{ color: 'var(--text-muted)' }}>Belum ada</span>
+                          <span className="badge bg-navy-100 dark:bg-navy-800 text-[10px]" style={{ color: 'var(--text-muted)' }}>- Permohonan</span>
+                        )}
+                        {(cat.file_template_pengantar_path || cat.file_template_path) ? (
+                          <span className="badge bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px]">
+                            <Check className="w-2.5 h-2.5 mr-1" />
+                            Pengantar
+                          </span>
+                        ) : (
+                          <span className="badge bg-navy-100 dark:bg-navy-800 text-[10px]" style={{ color: 'var(--text-muted)' }}>- Pengantar</span>
                         )}
                         {cat.ttd_digital && (
                           <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-[10px]">
@@ -212,9 +325,22 @@ export default function KelolaKategori() {
           {/* Info Surat */}
           <div className="space-y-4">
             <h4 className="section-title">Informasi Surat</h4>
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Kategori Surat</label>
-              <input type="text" value={form.nama_kategori} onChange={(e) => setForm({ ...form, nama_kategori: e.target.value })} className="input-base" placeholder="Contoh: Surat Pengantar Penelitian" required />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Kategori Surat</label>
+                <input type="text" value={form.nama_kategori} onChange={(e) => setForm({ ...form, nama_kategori: e.target.value })} className="input-base" placeholder="Contoh: Surat Pengantar Penelitian" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Kelompok Surat</label>
+                <select
+                  value={form.grup_kategori}
+                  onChange={(e) => setForm({ ...form, grup_kategori: e.target.value })}
+                  className="select-base"
+                >
+                  <option value="Akademik">Akademik</option>
+                  <option value="Kemahasiswaan">Kemahasiswaan</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Deskripsi</label>
@@ -223,13 +349,41 @@ export default function KelolaKategori() {
           </div>
 
           {/* Template */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h4 className="section-title">Template Surat & Pengaturan</h4>
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Upload Template (.docx) <span className="font-normal" style={{ color: 'var(--text-muted)' }}>Maks. 20MB</span>
-              </label>
-              <input type="file" accept=".docx" onChange={(e) => setForm({ ...form, file_template: e.target.files[0] })} className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  1. Template Surat Permohonan (.docx)
+                </label>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Dibuat saat Mahasiswa mengajukan surat.</p>
+                <input
+                  type="file"
+                  accept=".docx"
+                  onChange={(e) => setForm({ ...form, file_template_permohonan: e.target.files[0] })}
+                  className="block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer"
+                />
+                {(editCat?.file_template_permohonan_path || editCat?.file_template_path) && !form.file_template_permohonan && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1">✓ Template permohonan aktif</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  2. Template Surat Pengantar (.docx)
+                </label>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Dibuat saat Admin menyetujui (ACC) surat.</p>
+                <input
+                  type="file"
+                  accept=".docx"
+                  onChange={(e) => setForm({ ...form, file_template_pengantar: e.target.files[0] })}
+                  className="block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer"
+                />
+                {(editCat?.file_template_pengantar_path || editCat?.file_template_path) && !form.file_template_pengantar && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1">✓ Template pengantar aktif</p>
+                )}
+              </div>
             </div>
 
             <div className="pt-2">
@@ -241,11 +395,11 @@ export default function KelolaKategori() {
                   className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 dark:border-gray-700"
                 />
                 <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Memerlukan TTD Digital Mahasiswa
+                  Memerlukan TTD Digital Mahasiswa (untuk Surat Permohonan)
                 </span>
               </label>
               <p className="text-xs mt-1 ml-6" style={{ color: 'var(--text-muted)' }}>
-                Jika diaktifkan, mahasiswa wajib mengunggah file TTD digital (PNG/JPG) saat mengajukan surat ini.
+                Jika diaktifkan, mahasiswa wajib mengunggah file TTD digital (PNG/JPG) yang akan otomatis terpasang pada Surat Permohonan.
               </p>
             </div>
           </div>
@@ -267,10 +421,9 @@ export default function KelolaKategori() {
               <div key={i} className="flex gap-2 items-start">
                 <span className="text-xs font-medium mt-2.5 w-6" style={{ color: 'var(--text-muted)' }}>#{i + 1}</span>
                 <input type="text" value={r.nama_syarat} onChange={(e) => updateReq(i, 'nama_syarat', e.target.value)} className="input-base flex-1" placeholder="Nama persyaratan" />
-                <select value={r.tipe_file} onChange={(e) => updateReq(i, 'tipe_file', e.target.value)} className="select-base w-28">
+                <select value={r.tipe_file === 'JPG' || r.tipe_file === 'PNG' ? 'JPG/PNG' : r.tipe_file} onChange={(e) => updateReq(i, 'tipe_file', e.target.value)} className="select-base w-32">
                   <option value="PDF">PDF</option>
-                  <option value="JPG">JPG</option>
-                  <option value="PNG">PNG</option>
+                  <option value="JPG/PNG">JPG/PNG</option>
                   <option value="DOCX">DOCX</option>
                 </select>
                 <button type="button" onClick={() => removeReq(i)} className="mt-2 p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">

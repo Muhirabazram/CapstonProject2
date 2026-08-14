@@ -15,6 +15,7 @@ class LetterRequest extends Model
         'status',
         'tanggal_pengajuan',
         'file_hasil_path',
+        'file_permohonan_path',
         'file_ttd_digital_path',
         'alasan_penolakan',
     ];
@@ -26,7 +27,7 @@ class LetterRequest extends Model
 
     public function category()
     {
-        return $this->belongsTo(LetterCategory::class, 'category_id');
+        return $this->belongsTo(LetterCategory::class, 'category_id')->withTrashed();
     }
 
     public function values()

@@ -7,7 +7,7 @@ import EmptyState from '../../components/EmptyState'
 import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Download, FileText, Clock, Eye, AlertCircle, Edit3, RotateCcw } from 'lucide-react'
+import { Download, FileText, Clock, Eye, AlertCircle, Edit3, RotateCcw, Calendar, X, Search } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
@@ -22,6 +22,10 @@ export default function RiwayatStatus() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState(null)
   const [previewModal, setPreviewModal] = useState({ open: false, blob: null, filename: '', title: '', reqId: null })
   const toast = useToast()
@@ -46,6 +50,16 @@ export default function RiwayatStatus() {
     fetchHistory()
   }, [])
 
+  const availableCategories = useMemo(() => {
+    const catsMap = new Map()
+    requests.forEach((r) => {
+      if (r.category) {
+        catsMap.set(String(r.category.id), r.category.nama_kategori)
+      }
+    })
+    return Array.from(catsMap.entries()).map(([id, name]) => ({ id, name }))
+  }, [requests])
+
   const statusCounts = useMemo(() => {
     return {
       diajukan: requests.filter(r => r.status === 'diajukan').length,
@@ -57,9 +71,25 @@ export default function RiwayatStatus() {
   }, [requests])
 
   const filteredRequests = useMemo(() => {
-    if (!filterStatus) return requests
-    return requests.filter(r => r.status === filterStatus)
-  }, [requests, filterStatus])
+    return requests.filter((r) => {
+      const categoryName = r.category?.nama_kategori || ''
+      const matchSearch = !search || categoryName.toLowerCase().includes(search.toLowerCase()) || String(r.id).includes(search)
+      const matchStatus = !filterStatus || r.status === filterStatus
+      const matchCategory = !filterCategory || String(r.category_id) === String(filterCategory) || categoryName === filterCategory
+
+      const rDateStr = r.tanggal_pengajuan ? r.tanggal_pengajuan.split('T')[0] : (r.created_at ? r.created_at.split('T')[0] : '')
+      let matchDate = true
+      if (startDate && endDate) {
+        matchDate = rDateStr >= startDate && rDateStr <= endDate
+      } else if (startDate) {
+        matchDate = rDateStr === startDate
+      } else if (endDate) {
+        matchDate = rDateStr === endDate
+      }
+
+      return matchSearch && matchStatus && matchCategory && matchDate
+    })
+  }, [requests, filterStatus, filterCategory, startDate, endDate, search])
 
   const handlePreviewResult = async (req) => {
     try {
@@ -103,6 +133,41 @@ export default function RiwayatStatus() {
     }
   }
 
+  const handleDownloadPermohonan = async (id, customFilename = '') => {
+    try {
+      const response = await api.get(`/documents/permohonan/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = customFilename || `Surat_Permohonan_${id}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Surat Permohonan berhasil diunduh')
+    } catch {
+      toast.error('Gagal mengunduh surat permohonan')
+    }
+  }
+
+  const handlePreviewPermohonan = async (req) => {
+    try {
+      const response = await api.get(`/documents/permohonan/${req.id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const filename = req.file_permohonan_path ? req.file_permohonan_path.split('/').pop() : `Surat_Permohonan_${req.id}.docx`
+      setPreviewModal({
+        open: true,
+        blob: response.data,
+        filename,
+        title: `Surat Permohonan - ${req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id
+      })
+    } catch {
+      toast.error('Gagal memuat preview surat permohonan.')
+    }
+  }
+
   const handleDownloadReqDoc = async (rrId, name) => {
     try {
       const response = await api.get(`/documents/requirement/${rrId}`, { responseType: 'blob' })
@@ -138,30 +203,88 @@ export default function RiwayatStatus() {
   return (
     <div className="space-y-6">
       {/* Header & Filter */}
-      <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+      <div className="space-y-4">
         <div>
           <h2 className="page-title">Riwayat & Status</h2>
           <p className="page-description mt-1">Daftar semua permohonan surat yang pernah Anda ajukan.</p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-44">
-            <option value="">Semua Status</option>
-            <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
-            <option value="diterima">Diterima ({statusCounts.diterima})</option>
-            <option value="diproses">Diproses ({statusCounts.diproses})</option>
-            <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
-            <option value="selesai">Selesai ({statusCounts.selesai})</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => fetchHistory(true)}
-            disabled={refreshing || loading}
-            className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
-            title="Refresh Riwayat Status"
-          >
-            <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
+
+        {/* Filter Card */}
+        <div className="card p-4 space-y-3">
+          <div className="flex flex-col md:flex-row gap-3 items-center">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="input-base pl-10"
+                placeholder="Cari jenis surat atau ID..."
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
+              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="select-base w-full sm:w-48">
+                <option value="">Semua Kategori Surat</option>
+                {availableCategories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-40">
+                <option value="">Semua Status</option>
+                <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
+                <option value="diterima">Diterima ({statusCounts.diterima})</option>
+                <option value="diproses">Diproses ({statusCounts.diproses})</option>
+                <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
+                <option value="selesai">Selesai ({statusCounts.selesai})</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => fetchHistory(true)}
+                disabled={refreshing || loading}
+                className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
+                title="Refresh Riwayat Status"
+              >
+                <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Date Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 font-semibold shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                <Calendar className="w-4 h-4 text-primary" />
+                <span>Filter Tanggal:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="input-base text-xs py-1.5 px-2.5 w-36"
+                  title="Dari Tanggal"
+                />
+                <span style={{ color: 'var(--text-muted)' }}>s/d</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="input-base text-xs py-1.5 px-2.5 w-36"
+                  title="Sampai Tanggal"
+                />
+              </div>
+            </div>
+            {(startDate || endDate) && (
+              <button
+                type="button"
+                onClick={() => { setStartDate(''); setEndDate('') }}
+                className="text-xs text-red-500 hover:underline flex items-center gap-1 font-medium shrink-0"
+              >
+                <X className="w-3.5 h-3.5" /> Reset Tanggal
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -184,7 +307,7 @@ export default function RiwayatStatus() {
                   {loading ? (
                     <tr><td colSpan={5} className="px-6 py-12"><SkeletonTable rows={4} cols={5} /></td></tr>
                   ) : filteredRequests.length === 0 ? (
-                    <tr><td colSpan={5}><EmptyState message={filterStatus ? "Tidak ada pengajuan dengan status ini" : "Belum ada riwayat pengajuan"} icon={FileText} /></td></tr>
+                    <tr><td colSpan={5}><EmptyState message={filterStatus || startDate || endDate || search ? "Tidak ada pengajuan ditemukan" : "Belum ada riwayat pengajuan"} icon={FileText} /></td></tr>
                   ) : (
                     filteredRequests.map((req) => (
                       <tr
@@ -195,7 +318,9 @@ export default function RiwayatStatus() {
                         <td className="px-6 py-3 font-mono text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                           #REQ-{String(req.id).padStart(3, '0')}
                         </td>
-                        <td className="px-6 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>{req.category?.nama_kategori || '-'}</td>
+                        <td className="px-6 py-3 font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {req.category?.nama_kategori || '-'}
+                        </td>
                         <td className="px-6 py-3 hidden sm:table-cell" style={{ color: 'var(--text-muted)' }}>{formatDate(req.tanggal_pengajuan)}</td>
                         <td className="px-6 py-3"><StatusBadge status={req.status} /></td>
                         <td className="px-6 py-3">
@@ -231,7 +356,9 @@ export default function RiwayatStatus() {
                 </div>
                 <div>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Kategori</p>
-                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{selected.category?.nama_kategori || '-'}</p>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {selected.category?.nama_kategori || '-'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tanggal</p>
@@ -328,22 +455,44 @@ export default function RiwayatStatus() {
                 </div>
               )}
 
-              {/* Download Result & Preview */}
+              {/* Surat Permohonan */}
+              <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <h4 className="section-title text-xs text-blue-600 dark:text-blue-400">📄 Surat Permohonan Saya</h4>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePreviewPermohonan(selected)}
+                    className="btn-ghost btn-sm flex-1 flex items-center justify-center gap-1.5 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-900/20"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Lihat Permohonan
+                  </button>
+                  <button
+                    onClick={() => handleDownloadPermohonan(selected.id, `Surat_Permohonan_${selected.id}.docx`)}
+                    className="btn-ghost btn-sm flex-1 flex items-center justify-center gap-1.5 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-900/20"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Unduh Permohonan
+                  </button>
+                </div>
+              </div>
+
+              {/* Download Result & Preview Surat Pengantar */}
               {selected.status === 'selesai' && (
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <h4 className="section-title text-xs text-emerald-600 dark:text-emerald-400">✉️ Surat Pengantar Resmi (ACC)</h4>
                   <button
                     onClick={() => handlePreviewResult(selected)}
                     className="btn-secondary w-full flex items-center justify-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
-                    Preview Surat Resmi
+                    Preview Surat Pengantar
                   </button>
                   <button
                     onClick={() => handleDownloadResult(selected.id)}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
                     <Download className="w-4 h-4" />
-                    Download Surat Resmi (.docx)
+                    Download Surat Pengantar (.docx)
                   </button>
                 </div>
               )}

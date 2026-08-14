@@ -50,6 +50,13 @@ class RequestController extends Controller
             'values.variable',
         ])->findOrFail($id);
 
+        if ($letterRequest->status === 'selesai') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pengajuan yang sudah berstatus Selesai tidak dapat diubah lagi.',
+            ], 400);
+        }
+
         if ($request->has('alasan_penolakan')) {
             $letterRequest->alasan_penolakan = $request->alasan_penolakan;
         }
@@ -70,8 +77,8 @@ class RequestController extends Controller
                 if ($letterRequest->file_hasil_path && Storage::disk('public')->exists($letterRequest->file_hasil_path)) {
                     Storage::disk('public')->delete($letterRequest->file_hasil_path);
                 }
-                // Auto generate fresh document from template
-                $generated = DocumentGeneratorService::generate($letterRequest);
+                // Auto generate fresh Surat Pengantar document from template
+                $generated = DocumentGeneratorService::generatePengantar($letterRequest);
                 if ($generated) {
                     $filePath = $generated;
                 }
