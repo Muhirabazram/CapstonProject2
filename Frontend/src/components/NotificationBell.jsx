@@ -163,9 +163,9 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
     }
     setOpen(false)
     if (role === 'admin') {
-      navigate('/admin/requests')
+      navigate('/admin/pengajuan')
     } else {
-      navigate('/student/status')
+      navigate('/mahasiswa/riwayat')
     }
   }
 
@@ -208,7 +208,7 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                className="text-xs font-medium hover:underline flex items-center gap-1 text-blue-600 dark:text-sky-400"
               >
                 <Check className="w-3.5 h-3.5" />
                 Tandai Dibaca
@@ -239,14 +239,14 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <p className={`text-xs font-semibold truncate ${!n.isRead ? 'text-primary' : ''}`} style={{ color: !n.isRead ? undefined : 'var(--text-primary)' }}>
+                        <p className={`text-xs font-semibold truncate ${!n.isRead ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>
                           {n.title}
                         </p>
-                        <span className="text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[10px] shrink-0 text-slate-500 dark:text-slate-400">
                           {formatTimeAgo(n.time)}
                         </span>
                       </div>
-                      <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-xs line-clamp-2 leading-relaxed text-slate-600 dark:text-slate-300">
                         {n.message}
                       </p>
                     </div>
@@ -260,13 +260,13 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-2.5 bg-navy-50/50 dark:bg-navy-900/50 text-center border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <div className="px-4 py-2.5 text-center border-t" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
             <button
               onClick={() => {
                 setOpen(false)
-                navigate(role === 'admin' ? '/admin/requests' : '/student/status')
+                navigate(role === 'admin' ? '/admin/pengajuan' : '/mahasiswa/riwayat')
               }}
-              className="text-xs font-medium text-primary hover:underline flex items-center justify-center gap-1 mx-auto"
+              className="text-xs font-semibold flex items-center justify-center gap-1 mx-auto text-blue-600 dark:text-sky-400 hover:underline"
             >
               Lihat Semua Permohonan
               <ChevronRight className="w-3.5 h-3.5" />

@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
+import { NeoProvider } from './context/NeoContext'
+import { useEffect } from 'react'
 import Login from './pages/Login'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -10,7 +12,6 @@ import KelolaKategori from './pages/admin/KelolaKategori'
 import KelolaPengajuan from './pages/admin/KelolaPengajuan'
 import MahasiswaLayout from './pages/mahasiswa/MahasiswaLayout'
 import MahasiswaDashboard from './pages/mahasiswa/MahasiswaDashboard'
-import DaftarTemplate from './pages/mahasiswa/DaftarTemplate'
 import FormPengajuan from './pages/mahasiswa/FormPengajuan'
 import RiwayatStatus from './pages/mahasiswa/RiwayatStatus'
 import ProfilSaya from './pages/ProfilSaya'
@@ -47,7 +48,6 @@ function AppRoutes() {
       </Route>
       <Route path="/mahasiswa" element={<ProtectedRoute role="mahasiswa"><MahasiswaLayout /></ProtectedRoute>}>
         <Route index element={<MahasiswaDashboard />} />
-        <Route path="template" element={<DaftarTemplate />} />
         <Route path="pengajuan" element={<FormPengajuan />} />
         <Route path="riwayat" element={<RiwayatStatus />} />
         <Route path="profil" element={<ProfilSaya />} />
@@ -58,14 +58,32 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.querySelector('[data-modal-overlay]')
+        if (modal) modal.click()
+        document.dispatchEvent(new CustomEvent('modal:close'))
+      }
+      if (e.key === 'Enter' && !e.target.closest('input, textarea, select')) {
+        const activeBtn = document.querySelector('[data-confirm-active]:focus, button[data-confirm]:focus')
+        if (activeBtn) activeBtn.click()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </ToastProvider>
+        <NeoProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </ToastProvider>
+        </NeoProvider>
       </ThemeProvider>
     </BrowserRouter>
   )

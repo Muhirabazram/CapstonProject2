@@ -48,7 +48,7 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={t.id}
-              className={`${colors[t.type]} text-white px-4 py-3 rounded-xl shadow-elevated flex items-center gap-3 animate-slide-in text-sm font-medium`}
+              className={`${colors[t.type]} text-white px-4 py-3 rounded-xl shadow-elevated flex items-center gap-3 animate-slide-in text-sm font-medium neo-toast`}
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span className="flex-1">{t.message}</span>

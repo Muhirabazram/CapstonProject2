@@ -60,6 +60,11 @@ export default {
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-in': 'slideIn 0.3s ease-out',
         'slide-up': 'slideUp 0.2s ease-out',
+        'neo-fade-in': 'neoFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        'neo-slide-up': 'neoSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+        'neo-scale-in': 'neoScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'neo-glow-pulse': 'neoGlowPulse 3s ease-in-out infinite',
+        'neo-shimmer': 'neoShimmer 2s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -73,6 +78,26 @@ export default {
         slideUp: {
           from: { transform: 'translateY(10px)', opacity: '0' },
           to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        neoFadeIn: {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        neoSlideUp: {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        neoScaleIn: {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        neoGlowPulse: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '0.8' },
+        },
+        neoShimmer: {
+          from: { backgroundPosition: '200% 0' },
+          to: { backgroundPosition: '-200% 0' },
         },
       },
     },

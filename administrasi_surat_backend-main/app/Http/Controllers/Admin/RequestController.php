@@ -64,6 +64,11 @@ class RequestController extends Controller
         if ($request->status === 'selesai') {
             $filePath = $letterRequest->file_hasil_path;
 
+            // Generate nomor surat before generating pengantar
+            if (empty($letterRequest->nomor_surat)) {
+                $letterRequest->nomor_surat = DocumentGeneratorService::generateNomorSurat($letterRequest);
+            }
+
             if ($request->hasFile('file_surat')) {
                 // Delete old file if exists
                 if ($letterRequest->file_hasil_path && Storage::disk('public')->exists($letterRequest->file_hasil_path)) {

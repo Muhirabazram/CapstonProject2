@@ -285,7 +285,7 @@ export default function KelolaPengajuan() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-base pl-10"
-              placeholder="Cari nama, NPM, atau kategori..."
+              placeholder="Cari nama, NIM, atau kategori..."
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">

@@ -179,9 +179,7 @@ export default function ProfilSaya() {
       <div className="card p-6">
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="w-24 h-24 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-primary dark:text-primary-200 font-bold text-3xl">
-              {name.charAt(0).toUpperCase()}
-            </span>
+            <User className="w-10 h-10 text-primary dark:text-primary-200" />
           </div>
           <div className="text-center sm:text-left flex-1">
             <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{name}</h3>
