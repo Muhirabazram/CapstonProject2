@@ -1,1 +1,1 @@
-fix: Always generate fresh template output on download for Surat Permohonan & Surat Pengantar
+fix: Tombol unduh di modal preview kini mengunduh jenis surat yang sesuai (Surat Permohonan vs Surat Pengantar)

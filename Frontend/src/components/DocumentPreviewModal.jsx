@@ -139,23 +139,34 @@ export default function DocumentPreviewModal({
 
   if (!isOpen) return null
 
+  const handleDirectDownload = () => {
+    if (onDownload) {
+      onDownload()
+    } else if (fileBlob) {
+      const url = URL.createObjectURL(fileBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename || 'Dokumen.docx'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }
+
   return createPortal(
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-900/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl shrink-0">
               <FileText className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{title}</h3>
-              {filename && <p className="text-xs text-slate-400 mt-0.5">{filename}</p>}
+            <div className="min-w-0">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base truncate">{title}</h3>
+              {filename && <p className="text-xs text-slate-400 truncate">{filename}</p>}
             </div>
           </div>
 
@@ -173,8 +184,8 @@ export default function DocumentPreviewModal({
               </div>
             )}
 
-            {onDownload && (
-              <button type="button" onClick={onDownload} className="btn-ghost btn-sm text-blue-600 dark:text-blue-400 flex items-center gap-1.5" title="Unduh Dokumen">
+            {(onDownload || fileBlob) && (
+              <button type="button" onClick={handleDirectDownload} className="btn-ghost btn-sm text-blue-600 dark:text-blue-400 flex items-center gap-1.5" title="Unduh Dokumen">
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">Unduh</span>
               </button>

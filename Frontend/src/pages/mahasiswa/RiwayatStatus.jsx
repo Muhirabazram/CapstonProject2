@@ -95,16 +95,22 @@ export default function RiwayatStatus() {
     try {
       const response = await api.get(`/documents/download/${req.id}`, { responseType: 'blob' })
       if (response.data.size === 0) throw new Error('File kosong')
-      const filename = req.file_hasil_path ? req.file_hasil_path.split('/').pop() : `Surat_Resmi_${req.id}.docx`
+      const cd = response.headers['content-disposition']
+      let filename = `Surat_Pengantar_${req.id}.docx`
+      if (cd) {
+        const match = cd.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i)
+        if (match) filename = decodeURIComponent(match[1].replace(/"/g, ''))
+      }
       setPreviewModal({
         open: true,
         blob: response.data,
         filename,
-        title: `Surat Resmi - ${req.category?.nama_kategori || 'Pengajuan'}`,
-        reqId: req.id
+        title: `Surat Pengantar - ${req.category?.nama_kategori || 'Pengajuan'}`,
+        reqId: req.id,
+        downloadFn: () => handleDownloadResult(req.id)
       })
     } catch {
-      toast.error('Gagal memuat preview surat resmi.')
+      toast.error('Gagal memuat preview surat pengantar.')
     }
   }
 
@@ -127,7 +133,7 @@ export default function RiwayatStatus() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      toast.success('Surat berhasil diunduh')
+      toast.success('Surat Pengantar berhasil diunduh')
     } catch {
       toast.error('Gagal mengunduh dokumen. File mungkin belum tersedia.')
     }
@@ -161,7 +167,8 @@ export default function RiwayatStatus() {
         blob: response.data,
         filename,
         title: `Surat Permohonan - ${req.category?.nama_kategori || 'Pengajuan'}`,
-        reqId: req.id
+        reqId: req.id,
+        downloadFn: () => handleDownloadPermohonan(req.id, filename)
       })
     } catch {
       toast.error('Gagal memuat preview surat permohonan.')
@@ -514,7 +521,7 @@ export default function RiwayatStatus() {
         reqId={previewModal.reqId}
         fileBlob={previewModal.blob}
         filename={previewModal.filename}
-        onDownload={() => handleDownloadResult(previewModal.reqId)}
+        onDownload={previewModal.downloadFn || (() => handleDownloadResult(previewModal.reqId))}
       />
     </div>
   )

@@ -157,7 +157,8 @@ export default function KelolaPengajuan() {
         blob: response.data,
         filename,
         title: `Surat Pengantar - ${req.user?.name || req.category?.nama_kategori || 'Pengajuan'}`,
-        reqId: req.id
+        reqId: req.id,
+        downloadFn: () => handleDownloadResult(req.id, filename)
       })
     } catch {
       toast.error('Gagal memuat preview surat pengantar.')
@@ -191,7 +192,8 @@ export default function KelolaPengajuan() {
         blob: response.data,
         filename,
         title: `Surat Permohonan - ${req.mahasiswa?.nama || req.category?.nama_kategori || 'Pengajuan'}`,
-        reqId: req.id
+        reqId: req.id,
+        downloadFn: () => handleDownloadPermohonan(req.id, filename)
       })
     } catch {
       toast.error('Gagal memuat preview surat permohonan.')
@@ -698,7 +700,7 @@ export default function KelolaPengajuan() {
         reqId={previewModal.reqId}
         fileBlob={previewModal.blob}
         filename={previewModal.filename}
-        onDownload={() => handleDownloadResult(previewModal.reqId, previewModal.filename)}
+        onDownload={previewModal.downloadFn || (() => handleDownloadResult(previewModal.reqId, previewModal.filename))}
       />
     </div>
   )
