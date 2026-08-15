@@ -2,7 +2,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNeo } from '../context/NeoContext'
 import {
-  LayoutDashboard, Users, FolderOpen, FileText,
+  LayoutDashboard, Users, FolderOpen, FileText, Download,
   Send, Clock, LogOut, ChevronLeft, User, GraduationCap
 } from 'lucide-react'
 
@@ -11,6 +11,7 @@ const adminLinks = [
   { to: '/admin/mahasiswa', icon: Users, label: 'Kelola Mahasiswa' },
   { to: '/admin/kategori', icon: FolderOpen, label: 'Kategori & Template' },
   { to: '/admin/pengajuan', icon: FileText, label: 'Daftar Pengajuan' },
+  { to: '/admin/template', icon: Download, label: 'Unduh Template' },
 ]
 
 const mahasiswaLinks = [

@@ -17,14 +17,23 @@ class DocumentController extends Controller
     {
         $category = LetterCategory::findOrFail($id);
 
-        if (!$category->file_template_path || !Storage::disk('public')->exists($category->file_template_path)) {
+        $filePath = null;
+        if ($category->file_template_pengantar_path && Storage::disk('public')->exists($category->file_template_pengantar_path)) {
+            $filePath = $category->file_template_pengantar_path;
+        } elseif ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
+            $filePath = $category->file_template_path;
+        } elseif ($category->file_template_permohonan_path && Storage::disk('public')->exists($category->file_template_permohonan_path)) {
+            $filePath = $category->file_template_permohonan_path;
+        }
+
+        if (!$filePath) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'File template tidak ditemukan.',
             ], 404);
         }
 
-        $fullPath = Storage::disk('public')->path($category->file_template_path);
+        $fullPath = Storage::disk('public')->path($filePath);
         $downloadName = 'Template_' . str_replace(' ', '_', $category->nama_kategori) . '.docx';
 
         return response()->download($fullPath, $downloadName);

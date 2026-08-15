@@ -5,7 +5,7 @@ import { SkeletonCard } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
 import { Download, FileText, Loader } from 'lucide-react'
 
-export default function DaftarTemplate() {
+export default function AdminDaftarTemplate() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
@@ -41,13 +41,11 @@ export default function DaftarTemplate() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="page-title">Unduh Template</h2>
-        <p className="page-description mt-1">Unduh template kosong surat jika ingin mengisi format secara manual.</p>
+        <p className="page-description mt-1">Download template kosong surat untuk keperluan administrasi.</p>
       </div>
 
-      {/* Cards */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1,2,3].map((i) => <SkeletonCard key={i} />)}

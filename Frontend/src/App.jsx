@@ -10,6 +10,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import ImportMahasiswa from './pages/admin/ImportMahasiswa'
 import KelolaKategori from './pages/admin/KelolaKategori'
 import KelolaPengajuan from './pages/admin/KelolaPengajuan'
+import AdminDaftarTemplate from './pages/admin/AdminDaftarTemplate'
 import MahasiswaLayout from './pages/mahasiswa/MahasiswaLayout'
 import MahasiswaDashboard from './pages/mahasiswa/MahasiswaDashboard'
 import FormPengajuan from './pages/mahasiswa/FormPengajuan'
@@ -44,6 +45,7 @@ function AppRoutes() {
         <Route path="mahasiswa" element={<ImportMahasiswa />} />
         <Route path="kategori" element={<KelolaKategori />} />
         <Route path="pengajuan" element={<KelolaPengajuan />} />
+        <Route path="template" element={<AdminDaftarTemplate />} />
         <Route path="profil" element={<ProfilSaya />} />
       </Route>
       <Route path="/mahasiswa" element={<ProtectedRoute role="mahasiswa"><MahasiswaLayout /></ProtectedRoute>}>

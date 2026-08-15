@@ -354,7 +354,7 @@ export default function ProfilSaya() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Tempat Lahir" value={profile?.mahasiswa?.tempat_lahir} />
-                <InfoRow label="Tanggal Lahir" value={profile?.mahasiswa?.tanggal_lahir} />
+                <InfoRow label="Tanggal Lahir" value={profile?.mahasiswa?.tanggal_lahir ? new Date(profile.mahasiswa.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} />
                 <div className="sm:col-span-2">
                   <InfoRow label="Alamat" value={profile?.mahasiswa?.alamat} />
                 </div>
