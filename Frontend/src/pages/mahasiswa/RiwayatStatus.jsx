@@ -217,80 +217,82 @@ export default function RiwayatStatus() {
         </div>
 
         {/* Filter Card */}
-        <div className="card p-4 space-y-3">
-          <div className="flex flex-col md:flex-row gap-3 items-center">
-            <div className="relative flex-1 w-full">
+        <div className="card p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-56 md:w-60">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="input-base pl-10"
-                placeholder="Cari jenis surat atau ID..."
+                className="input-base pl-9 text-sm"
+                placeholder="Cari jenis surat/ID..."
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
-              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="select-base w-full sm:w-48">
-                <option value="">Semua Kategori Surat</option>
-                {availableCategories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base w-full sm:w-40">
-                <option value="">Semua Status</option>
-                <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
-                <option value="diterima">Diterima ({statusCounts.diterima})</option>
-                <option value="diproses">Diproses ({statusCounts.diproses})</option>
-                <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
-                <option value="selesai">Selesai ({statusCounts.selesai})</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => fetchHistory(true)}
-                disabled={refreshing || loading}
-                className="btn-secondary flex items-center gap-1.5 px-3 py-2 shrink-0"
-                title="Refresh Riwayat Status"
-              >
-                <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Date Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs" style={{ borderTop: '1px solid var(--border-color)' }}>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 font-semibold shrink-0" style={{ color: 'var(--text-secondary)' }}>
-                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>Filter Tanggal:</span>
+            {/* Category Filter */}
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="select-base text-sm w-full sm:w-44">
+              <option value="">Semua Kategori</option>
+              {availableCategories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            {/* Status Filter */}
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base text-sm w-full sm:w-36">
+              <option value="">Semua Status</option>
+              <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
+              <option value="diterima">Diterima ({statusCounts.diterima})</option>
+              <option value="diproses">Diproses ({statusCounts.diproses})</option>
+              <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
+              <option value="selesai">Selesai ({statusCounts.selesai})</option>
+            </select>
+
+            {/* Date Filter - Inline */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1 text-xs font-semibold shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="hidden xl:inline">Filter Tanggal:</span>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="input-base text-xs py-1.5 px-2.5 w-36"
-                  title="Dari Tanggal"
-                />
-                <span style={{ color: 'var(--text-muted)' }}>s/d</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="input-base text-xs py-1.5 px-2.5 w-36"
-                  title="Sampai Tanggal"
-                />
-              </div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input-base text-xs py-1.5 px-2 w-32"
+                title="Dari Tanggal"
+              />
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>s/d</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-base text-xs py-1.5 px-2 w-32"
+                title="Sampai Tanggal"
+              />
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => { setStartDate(''); setEndDate('') }}
+                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors shrink-0"
+                  title="Reset Tanggal"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            {(startDate || endDate) && (
-              <button
-                type="button"
-                onClick={() => { setStartDate(''); setEndDate('') }}
-                className="text-xs text-red-500 hover:underline flex items-center gap-1 font-medium shrink-0"
-              >
-                <X className="w-3.5 h-3.5" /> Reset Tanggal
-              </button>
-            )}
+
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={() => fetchHistory(true)}
+              disabled={refreshing || loading}
+              className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs shrink-0 ml-auto"
+              title="Refresh Riwayat Status"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
           </div>
         </div>
       </div>

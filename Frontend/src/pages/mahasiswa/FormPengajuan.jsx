@@ -283,11 +283,37 @@ export default function FormPengajuan() {
   const hasRequirements = selectedCat && (selectedCat.requirements || []).length > 0
 
   return (
-    <div className="space-y-6 w-full max-w-6xl">
-      {/* Header */}
-      <div>
-        <h2 className="page-title">Buat Pengajuan Surat</h2>
-        <p className="page-description mt-1">Isi formulir dan unggah dokumen prasyarat untuk pengajuan surat.</p>
+    <div className="space-y-6 w-full">
+      {/* Header with Inline Stepper */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h2 className="page-title">Buat Pengajuan Surat</h2>
+          <p className="page-description mt-1">Isi formulir dan unggah dokumen prasyarat untuk pengajuan surat.</p>
+        </div>
+
+        {/* Stepper (Tata Cara) */}
+        <div className="card p-3 px-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {steps.map((s, i) => (
+              <div key={s.num} className="flex items-center">
+                <div className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${step >= s.num
+                    ? 'bg-primary text-white'
+                    : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
+                    }`}>
+                    {step > s.num ? <CheckCircle className="w-3.5 h-3.5" /> : s.num}
+                  </div>
+                  <span className={`text-xs font-medium ${step >= s.num ? 'text-navy-800 dark:text-navy-100' : 'text-navy-400 dark:text-navy-600'}`}>
+                    {s.label}
+                  </span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div className={`w-4 sm:w-8 h-0.5 mx-2 rounded ${step > s.num ? 'bg-primary' : 'bg-navy-200 dark:bg-navy-700'}`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {reapplyReq && (
@@ -306,30 +332,6 @@ export default function FormPengajuan() {
           )}
         </div>
       )}
-
-      {/* Stepper */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between">
-          {steps.map((s, i) => (
-            <div key={s.num} className="flex items-center flex-1">
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step >= s.num
-                  ? 'bg-primary text-white'
-                  : 'bg-navy-100 dark:bg-navy-800 text-navy-400 dark:text-navy-600'
-                  }`}>
-                  {step > s.num ? <CheckCircle className="w-4 h-4" /> : s.num}
-                </div>
-                <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? 'text-navy-800 dark:text-navy-100' : 'text-navy-400 dark:text-navy-600'}`}>
-                  {s.label}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-3 rounded ${step > s.num ? 'bg-primary' : 'bg-navy-200 dark:bg-navy-700'}`} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Step 1: Category Selection */}
       {step === 1 && (
@@ -403,130 +405,135 @@ export default function FormPengajuan() {
 
       {/* Step 2: Form & Upload */}
       {step === 2 && selectedCat && (
-        <div className="space-y-4">
-          {/* Form Values */}
-          {hasVariables && (
-            <div className="card p-6 space-y-4">
-              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Isian Data</h3>
-              {selectedCat.variables.map((v) => (
-                <div key={v.id}>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                    {v.nama_variabel.replace(/_/g, ' ')} <span className="text-red-500">*</span>
-                  </label>
-                  {v.tipe_input_html === 'textarea' ? (
-                    <textarea
-                      value={formValues[v.nama_variabel] || ''}
-                      onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
-                      className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
-                      rows={3}
-                      placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
-                    />
-                  ) : (
-                    <input
-                      type={v.tipe_input_html || 'text'}
-                      value={formValues[v.nama_variabel] || ''}
-                      onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
-                      className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
-                      placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
-                    />
-                  )}
-                  {errors[v.nama_variabel] && (
-                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors[v.nama_variabel]}
+        <div className="space-y-6">
+          <div className={`grid grid-cols-1 ${hasVariables && (hasRequirements || Boolean(selectedCat?.ttd_digital)) ? 'lg:grid-cols-2' : ''} gap-6 items-start`}>
+            {/* Left Column: Form Values */}
+            {hasVariables && (
+              <div className="card p-6 space-y-4">
+                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Isian Data</h3>
+                {selectedCat.variables.map((v) => (
+                  <div key={v.id}>
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      {v.nama_variabel.replace(/_/g, ' ')} <span className="text-red-500">*</span>
+                    </label>
+                    {v.tipe_input_html === 'textarea' ? (
+                      <textarea
+                        value={formValues[v.nama_variabel] || ''}
+                        onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
+                        className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
+                        rows={3}
+                        placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
+                      />
+                    ) : (
+                      <input
+                        type={v.tipe_input_html || 'text'}
+                        value={formValues[v.nama_variabel] || ''}
+                        onChange={(e) => handleValueChange(v.nama_variabel, e.target.value)}
+                        className={`input-base ${errors[v.nama_variabel] ? 'border-red-500 focus:ring-red-200' : ''}`}
+                        placeholder={`Masukkan ${v.nama_variabel.replace(/_/g, ' ')}`}
+                      />
+                    )}
+                    {errors[v.nama_variabel] && (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {errors[v.nama_variabel]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Right Column: Requirements & Digital Signature */}
+            <div className="space-y-6">
+              {/* Requirements Upload */}
+              {hasRequirements && (
+                <div className="card p-6 space-y-4">
+                  <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Dokumen Prasyarat</h3>
+                  {reapplyReq && (
+                    <p className="text-xs bg-navy-50 dark:bg-navy-900/50 p-2.5 rounded-lg text-primary">
+                      💡 <strong>Pengajuan Ulang:</strong> Jika tidak memilih file baru, dokumen prasyarat yang sudah diunggah sebelumnya akan tetap digunakan.
                     </p>
                   )}
+                  <ul className="text-xs list-disc list-inside space-y-1" style={{ color: 'var(--text-muted)' }}>
+                    {selectedCat.requirements.map((r) => (
+                      <li key={r.id}>{r.nama_syarat} ({formatTipeFile(r.tipe_file)})</li>
+                    ))}
+                  </ul>
+                  {selectedCat.requirements.map((r) => {
+                    const oldReqFile = reapplyReq?.request_requirements?.find((oldR) => oldR.requirement_id === r.id)
+                    const displayFormat = formatTipeFile(r.tipe_file)
+                    const acceptAttr = getAcceptAttribute(r.tipe_file)
+                    const formatHint = displayFormat
+                    return (
+                      <div key={r.id} className="space-y-1">
+                        <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          Upload {r.nama_syarat} <span className="font-normal text-xs" style={{ color: 'var(--text-muted)' }}>({formatHint}, Maks. 10MB)</span>
+                        </label>
+                        {oldReqFile?.file_path && !files[r.id] && (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                            ✓ Menggunakan dokumen sebelumnya: {oldReqFile.file_path.split('/').pop()}
+                          </p>
+                        )}
+                        <input
+                          type="file"
+                          accept={acceptAttr}
+                          onChange={(e) => handleFileChange(r.id, e.target.files[0])}
+                          className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors[`req_${r.id}`] ? 'file:bg-red-500' : ''}`}
+                        />
+                        {errors[`req_${r.id}`] && (
+                          <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" /> {errors[`req_${r.id}`]}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Requirements Upload */}
-          {hasRequirements && (
-            <div className="card p-6 space-y-4">
-              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Dokumen Prasyarat</h3>
-              {reapplyReq && (
-                <p className="text-xs bg-navy-50 dark:bg-navy-900/50 p-2.5 rounded-lg text-primary">
-                  💡 <strong>Pengajuan Ulang:</strong> Jika tidak memilih file baru, dokumen prasyarat yang sudah diunggah sebelumnya akan tetap digunakan.
-                </p>
               )}
-              <ul className="text-xs list-disc list-inside space-y-1" style={{ color: 'var(--text-muted)' }}>
-                {selectedCat.requirements.map((r) => (
-                  <li key={r.id}>{r.nama_syarat} ({formatTipeFile(r.tipe_file)})</li>
-                ))}
-              </ul>
-              {selectedCat.requirements.map((r) => {
-                const oldReqFile = reapplyReq?.request_requirements?.find((oldR) => oldR.requirement_id === r.id)
-                const displayFormat = formatTipeFile(r.tipe_file)
-                const acceptAttr = getAcceptAttribute(r.tipe_file)
-                const formatHint = displayFormat
-                return (
-                  <div key={r.id} className="space-y-1">
-                    <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Upload {r.nama_syarat} <span className="font-normal text-xs" style={{ color: 'var(--text-muted)' }}>({formatHint}, Maks. 10MB)</span>
-                    </label>
-                    {oldReqFile?.file_path && !files[r.id] && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                        ✓ Menggunakan dokumen sebelumnya: {oldReqFile.file_path.split('/').pop()}
-                      </p>
-                    )}
+
+              {/* Digital Signature Upload if required */}
+              {Boolean(selectedCat?.ttd_digital) && (
+                <div className="card p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tanda Tangan Digital</h3>
+                    <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs">Wajib</span>
+                  </div>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    Unggah file gambar tanda tangan digital Anda (Format: PNG atau JPG, Maks 5MB). File ini akan otomatis disisipkan ke dalam <strong>Surat Permohonan</strong> yang Anda ajukan.
+                  </p>
+                  {reapplyReq?.file_ttd_digital_path && !ttdFile && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ Menggunakan TTD Digital sebelumnya: {reapplyReq.file_ttd_digital_path.split('/').pop()} (Upload file baru jika ingin mengganti)
+                    </p>
+                  )}
+                  <div>
                     <input
                       type="file"
-                      accept={acceptAttr}
-                      onChange={(e) => handleFileChange(r.id, e.target.files[0])}
-                      className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors[`req_${r.id}`] ? 'file:bg-red-500' : ''}`}
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={(e) => handleTtdChange(e.target.files[0])}
+                      className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors.ttd ? 'file:bg-red-500' : ''}`}
                     />
-                    {errors[`req_${r.id}`] && (
+                    {errors.ttd && (
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" /> {errors[`req_${r.id}`]}
+                        <AlertCircle className="w-3 h-3" /> {errors.ttd}
                       </p>
                     )}
                   </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Digital Signature Upload if required */}
-          {Boolean(selectedCat?.ttd_digital) && (
-            <div className="card p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tanda Tangan Digital</h3>
-                <span className="badge bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs">Wajib</span>
-              </div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Unggah file gambar tanda tangan digital Anda (Format: PNG atau JPG, Maks 5MB). File ini akan otomatis disisipkan ke dalam <strong>Surat Permohonan</strong> yang Anda ajukan.
-              </p>
-              {reapplyReq?.file_ttd_digital_path && !ttdFile && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                  ✓ Menggunakan TTD Digital sebelumnya: {reapplyReq.file_ttd_digital_path.split('/').pop()} (Upload file baru jika ingin mengganti)
-                </p>
-              )}
-              <div>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  onChange={(e) => handleTtdChange(e.target.files[0])}
-                  className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors.ttd ? 'file:bg-red-500' : ''}`}
-                />
-                {errors.ttd && (
-                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> {errors.ttd}
-                  </p>
-                )}
-              </div>
-              {ttdPreview && (
-                <div className="mt-2 p-3 border rounded-xl flex items-center gap-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                  <img src={ttdPreview} alt="Preview TTD" className="h-16 object-contain border bg-white p-1 rounded-lg" />
-                  <div className="text-xs">
-                    <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ttdFile ? ttdFile.name : reapplyReq?.file_ttd_digital_path?.split('/').pop() || 'TTD Terpasang'}</p>
-                    {ttdFile && <p style={{ color: 'var(--text-muted)' }}>{(ttdFile.size / 1024).toFixed(1)} KB</p>}
-                  </div>
+                  {ttdPreview && (
+                    <div className="mt-2 p-3 border rounded-xl flex items-center gap-4" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <img src={ttdPreview} alt="Preview TTD" className="h-16 object-contain border bg-white p-1 rounded-lg" />
+                      <div className="text-xs">
+                        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ttdFile ? ttdFile.name : reapplyReq?.file_ttd_digital_path?.split('/').pop() || 'TTD Terpasang'}</p>
+                        {ttdFile && <p style={{ color: 'var(--text-muted)' }}>{(ttdFile.size / 1024).toFixed(1)} KB</p>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+          </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between pt-2">
             <button onClick={handleBack} className="btn-ghost flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" /> Kembali
             </button>

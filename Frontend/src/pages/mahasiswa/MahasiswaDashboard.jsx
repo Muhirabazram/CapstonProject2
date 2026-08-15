@@ -46,8 +46,16 @@ export default function MahasiswaDashboard() {
 
   const name = user?.mahasiswa?.nama || user?.username || 'Mahasiswa'
 
-  const latestRejected = requests.find((r) => r.status === 'ditolak')
-  const latestSelesai = requests.find((r) => r.status === 'selesai' && r.file_hasil_path)
+  const isWithinOneDay = (dateStr) => {
+    if (!dateStr) return false
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return false
+    const diffMs = new Date().getTime() - date.getTime()
+    return diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000
+  }
+
+  const latestRejected = requests.find((r) => r.status === 'ditolak' && isWithinOneDay(r.updated_at || r.tanggal_pengajuan || r.created_at))
+  const latestSelesai = requests.find((r) => r.status === 'selesai' && r.file_hasil_path && isWithinOneDay(r.updated_at || r.tanggal_pengajuan || r.created_at))
 
   const handlePreviewResult = async (req) => {
     try {
