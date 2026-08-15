@@ -13,17 +13,24 @@ class DocumentController extends Controller
     /**
      * Download blank category template .docx file
      */
-    public function downloadTemplate($id)
+    public function downloadTemplate($id, Request $request)
     {
         $category = LetterCategory::findOrFail($id);
+        $type = $request->query('type', 'pengantar');
 
         $filePath = null;
-        if ($category->file_template_pengantar_path && Storage::disk('public')->exists($category->file_template_pengantar_path)) {
-            $filePath = $category->file_template_pengantar_path;
-        } elseif ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
-            $filePath = $category->file_template_path;
-        } elseif ($category->file_template_permohonan_path && Storage::disk('public')->exists($category->file_template_permohonan_path)) {
-            $filePath = $category->file_template_permohonan_path;
+        if ($type === 'permohonan') {
+            if ($category->file_template_permohonan_path && Storage::disk('public')->exists($category->file_template_permohonan_path)) {
+                $filePath = $category->file_template_permohonan_path;
+            } elseif ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
+                $filePath = $category->file_template_path;
+            }
+        } else {
+            if ($category->file_template_pengantar_path && Storage::disk('public')->exists($category->file_template_pengantar_path)) {
+                $filePath = $category->file_template_pengantar_path;
+            } elseif ($category->file_template_path && Storage::disk('public')->exists($category->file_template_path)) {
+                $filePath = $category->file_template_path;
+            }
         }
 
         if (!$filePath) {
@@ -34,7 +41,8 @@ class DocumentController extends Controller
         }
 
         $fullPath = Storage::disk('public')->path($filePath);
-        $downloadName = 'Template_' . str_replace(' ', '_', $category->nama_kategori) . '.docx';
+        $suffix = $type === 'permohonan' ? 'Permohonan' : 'Pengantar';
+        $downloadName = 'Template_' . str_replace(' ', '_', $category->nama_kategori) . '_' . $suffix . '.docx';
 
         return response()->download($fullPath, $downloadName);
     }
