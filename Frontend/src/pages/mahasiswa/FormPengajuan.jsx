@@ -360,16 +360,16 @@ export default function FormPengajuan() {
                       {groupData.items.map((cat) => {
                         const isSelected = selectedCat?.id === cat.id
                         return (
-                          <button
+                          <div
                             key={cat.id}
-                            type="button"
                             onClick={() => setSelectedCat(cat)}
-                            className={`p-4 rounded-xl border text-left transition-all flex items-start justify-between gap-3 ${isSelected
+                            onDoubleClick={() => { setSelectedCat(cat); handleNext(); }}
+                            className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex items-start justify-between gap-3 ${isSelected
                                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm'
                                 : 'border-navy-200 dark:border-navy-700 hover:border-primary/50 hover:bg-navy-50/50 dark:hover:bg-navy-800/50'
                               }`}
                           >
-                            <div className="space-y-1">
+                            <div className="space-y-1.5 flex-1">
                               <p className={`text-sm font-semibold ${isSelected ? 'text-primary' : ''}`} style={{ color: isSelected ? undefined : 'var(--text-primary)' }}>
                                 {cat.nama_kategori}
                               </p>
@@ -378,9 +378,20 @@ export default function FormPengajuan() {
                                   {cat.deskripsi}
                                 </p>
                               )}
+                              {isSelected && (
+                                <div className="pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                                    className="btn-sm bg-primary hover:bg-primary-hover text-white text-xs font-medium flex items-center gap-1.5"
+                                  >
+                                    Lanjutkan Isi Formulir <ArrowRight className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            {isSelected && <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
-                          </button>
+                            {isSelected && <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />}
+                          </div>
                         )
                       })}
                       {groupData.items.length === 0 && (
@@ -392,14 +403,6 @@ export default function FormPengajuan() {
               )
             })}
           </div>
-
-          {selectedCat && (
-            <div className="flex justify-end pt-2">
-              <button onClick={handleNext} className="btn-primary flex items-center gap-2">
-                Lanjutkan Isi Formulir <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </div>
       )}
 
