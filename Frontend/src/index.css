@@ -179,6 +179,14 @@
     color: var(--text-muted);
   }
 
+  .input-base::-webkit-calendar-picker-indicator {
+    filter: invert(0.4);
+  }
+
+  .dark .input-base::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+  }
+
   .select-base {
     @apply w-full px-4 py-2.5 text-sm rounded-xl border transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer;
     background-color: var(--input-bg);

@@ -181,7 +181,7 @@ export default function KelolaKategori() {
       <div className="card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <span className="text-xs font-semibold text-navy-600 dark:text-navy-300 whitespace-nowrap flex items-center gap-1.5 mr-1">
-            <Filter className="w-3.5 h-3.5 text-primary" />
+            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             Kelompok:
           </span>
           <button

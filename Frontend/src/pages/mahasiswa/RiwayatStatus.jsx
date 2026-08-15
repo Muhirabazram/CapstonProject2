@@ -261,7 +261,7 @@ export default function RiwayatStatus() {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs" style={{ borderTop: '1px solid var(--border-color)' }}>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 font-semibold shrink-0" style={{ color: 'var(--text-secondary)' }}>
-                <Calendar className="w-4 h-4 text-primary" />
+                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Filter Tanggal:</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -390,14 +390,14 @@ export default function RiwayatStatus() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handlePreviewReqDoc(rr.id, rr.file_path.split('/').pop())}
-                              className="btn-ghost btn-sm flex items-center gap-1"
+                              className="btn-ghost btn-sm flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                               title="Preview"
                             >
                               <Eye className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => handleDownloadReqDoc(rr.id, rr.file_path.split('/').pop())}
-                              className="btn-ghost btn-sm flex items-center gap-1"
+                              className="btn-ghost btn-sm flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                               title="Unduh"
                             >
                               <Download className="w-3 h-3" />
@@ -431,7 +431,7 @@ export default function RiwayatStatus() {
                       href={`/storage/${selected.file_ttd_digital_path}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="btn-ghost btn-sm text-primary"
+                      className="btn-ghost btn-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                     >
                       <Eye className="w-3 h-3" />
                     </a>
