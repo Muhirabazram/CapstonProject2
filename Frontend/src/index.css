@@ -26,19 +26,46 @@
     --bg-primary: #0a1929;
     --bg-secondary: #102a43;
     --bg-tertiary: #1e3a5f;
-    --text-primary: #d9e2ec;
-    --text-secondary: #9fb3c8;
-    --text-muted: #627d98;
+    --text-primary: #e2e8f0;
+    --text-secondary: #b0bec5;
+    --text-muted: #90a4ae;
     --border-color: #243b53;
     --border-subtle: #1e3a5f;
-    --accent-primary: #2e6099;
-    --accent-hover: #1e3a5f;
+    --accent-primary: #4a90d9;
+    --accent-hover: #3a7bc8;
     --sidebar-bg: #0f172a;
     --sidebar-border: #1e3a5f;
     --card-bg: #102a43;
     --input-bg: #0f172a;
-    --input-border: #334e68;
+    --input-border: #455a64;
     --overlay: rgba(0, 0, 0, 0.6);
+  }
+
+  /* ===== NEO WORKSPACE MODE ===== */
+  .neo {
+    --neo-radius: 14px;
+    --neo-radius-sm: 10px;
+    --neo-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --neo-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --neo-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.09), 0 4px 8px rgba(0, 0, 0, 0.04);
+    --neo-shadow-window: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
+    --neo-glow: rgba(46, 96, 153, 0.12);
+    --neo-panel: #ffffff;
+    --neo-panel-header: #f4f6f9;
+    --neo-panel-border: #e2e8f0;
+    --neo-accent-bar: #1e3a5f;
+  }
+
+  .neo.dark {
+    --neo-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+    --neo-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+    --neo-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2);
+    --neo-shadow-window: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
+    --neo-glow: rgba(46, 96, 153, 0.2);
+    --neo-panel: #111d2e;
+    --neo-panel-header: #162536;
+    --neo-panel-border: #243b53;
+    --neo-accent-bar: #2e6099;
   }
 
   * {
@@ -57,7 +84,43 @@
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Neo wallpaper on body — always visible behind all content */
+  .neo body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url('/assets/themes/neo-workspace/light/neo-light-wallpaper.png');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.35;
+  }
+
+  .neo.dark body::before {
+    background-image: url('/assets/themes/neo-workspace/dark/neo-dark-wallpaper.png');
+    opacity: 0.3;
+  }
+
+  /* Neo gradient overlay on body — soft edge fade only */
+  .neo body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, var(--bg-primary) 0%, transparent 15%, transparent 85%, var(--bg-primary) 100%);
+    opacity: 0;
+  }
+
+  .neo.dark body::after {
+    opacity: 0.35;
   }
 
   ::-webkit-scrollbar {
@@ -114,6 +177,14 @@
 
   .input-base::placeholder {
     color: var(--text-muted);
+  }
+
+  .input-base::-webkit-calendar-picker-indicator {
+    filter: invert(0.4);
+  }
+
+  .dark .input-base::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
   }
 
   .select-base {
@@ -186,6 +257,238 @@
   @keyframes skeleton {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+  }
+
+  /* ===== NEO WORKSPACE COMPONENTS ===== */
+
+  /* Cards — solid with elevation */
+  .neo .card {
+    border-radius: var(--neo-radius);
+    box-shadow: var(--neo-shadow);
+    border: 1px solid var(--neo-panel-border);
+    background-color: var(--neo-panel);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .neo .card:hover {
+    box-shadow: var(--neo-shadow-md);
+    transform: translateY(-1px);
+    border-color: var(--neo-accent-bar);
+  }
+
+  .neo .card-hover:hover {
+    box-shadow: var(--neo-shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--neo-accent-bar);
+  }
+
+  /* Window panel — solid workspace window */
+  .neo .neo-window {
+    background: var(--neo-panel);
+    border: 1px solid var(--neo-panel-border);
+    border-radius: var(--neo-radius);
+    box-shadow: var(--neo-shadow-window);
+    overflow: hidden;
+  }
+
+  .neo .neo-window-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--neo-panel-border);
+    background: var(--neo-panel-header);
+  }
+
+  .neo .neo-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .neo .neo-dot-red { background: #ef4444; }
+  .neo .neo-dot-yellow { background: #eab308; }
+  .neo .neo-dot-green { background: #22c55e; }
+
+  /* Accent bar — left border on panels */
+  .neo .neo-accent-bar {
+    border-left: 3px solid var(--neo-accent-bar);
+  }
+
+  .neo .neo-page-enter {
+    animation: neoFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Classic mode page transition */
+  @keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-enter {
+    animation: pageFadeIn 0.2s ease-out both;
+  }
+
+  .neo .neo-stagger-1 { animation-delay: 0.05s; }
+  .neo .neo-stagger-2 { animation-delay: 0.1s; }
+  .neo .neo-stagger-3 { animation-delay: 0.15s; }
+  .neo .neo-stagger-4 { animation-delay: 0.2s; }
+  .neo .neo-stagger-5 { animation-delay: 0.25s; }
+  .neo .neo-stagger-6 { animation-delay: 0.3s; }
+
+  .neo .neo-glow {
+    position: relative;
+  }
+
+  .neo .neo-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--neo-glow), transparent 60%);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .neo .neo-glow:hover::before {
+    opacity: 1;
+  }
+
+  .neo .neo-table-row {
+    transition: all 0.2s ease;
+  }
+
+  .neo .neo-table-row:hover {
+    background: var(--neo-glow);
+  }
+
+  .neo .neo-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .neo .neo-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .neo .neo-btn:active::after {
+    opacity: 1;
+    transition: opacity 0s;
+  }
+
+  /* Sidebar — solid dock panel */
+  .neo .neo-sidebar {
+    background: var(--neo-panel);
+    border-right: 1px solid var(--neo-panel-border);
+    box-shadow: 1px 0 8px rgba(0, 0, 0, 0.04);
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .neo .neo-sidebar:hover {
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .neo .neo-sidebar .neo-sidebar-active {
+    position: relative;
+  }
+
+  .neo .neo-sidebar .neo-sidebar-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    border-radius: 0 2px 2px 0;
+    background: var(--neo-accent-bar);
+    box-shadow: 0 0 6px var(--neo-glow);
+  }
+
+  /* Topbar — solid with subtle bottom line */
+  .neo .neo-topbar {
+    background: var(--neo-panel);
+    border-bottom: 1px solid var(--neo-panel-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Modal — solid window, no glass on content */
+  .neo .neo-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .neo .neo-modal-content {
+    border-radius: var(--neo-radius);
+    box-shadow: var(--neo-shadow-lg), 0 0 0 1px var(--neo-panel-border);
+    border: 1px solid var(--neo-panel-border);
+    background: var(--neo-panel);
+    opacity: 1;
+    animation: neoScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Neo timeline */
+  .neo .neo-timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-primary);
+    background: var(--neo-panel);
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+
+  .neo .neo-timeline-dot.active {
+    background: var(--accent-primary);
+    box-shadow: 0 0 0 4px var(--neo-glow);
+  }
+
+  .neo .neo-timeline-line {
+    width: 2px;
+    background: var(--neo-panel-border);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+
+  .neo .neo-timeline-line.active {
+    background: var(--accent-primary);
+  }
+
+  /* Stat card widget */
+  .neo .neo-stat-widget {
+    border-left: 3px solid var(--neo-accent-bar);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .neo .neo-stat-widget:hover {
+    border-left-color: var(--accent-primary);
+    box-shadow: var(--neo-shadow-md);
+  }
+
+  /* Sidebar collapsed state — icon centering fix */
+  .neo .neo-sidebar-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
+  }
+
+  .neo .neo-sidebar-item-icon:hover {
+    background-color: var(--neo-glow);
   }
 }
 

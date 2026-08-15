@@ -1,4 +1,4 @@
-import { Check, Edit3, Filter, FolderOpen, Plus, Search, Trash2, X } from 'lucide-react'
+import { Check, Download, Edit3, Filter, FolderOpen, Loader, Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -24,6 +24,7 @@ export default function KelolaKategori() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [deleteId, setDeleteId] = useState(null)
+  const [downloading, setDownloading] = useState(null)
 
   // Filter states
   const [filterGroup, setFilterGroup] = useState('semua')
@@ -138,6 +139,30 @@ export default function KelolaKategori() {
     }
   }
 
+  const handleDownloadTemplate = async (id, name) => {
+    setDownloading(id)
+    try {
+      const response = await api.get(`/documents/template/${id}`, { responseType: 'blob' })
+      if (response.data.size === 0) throw new Error('File kosong')
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Template_${name.replace(/\s+/g, '_')}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Template berhasil diunduh')
+    } catch (err) {
+      const msg = err.response?.status === 404
+        ? 'File template belum tersedia di server.'
+        : 'Gagal mengunduh template.'
+      toast.error(msg)
+    } finally {
+      setDownloading(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -156,7 +181,7 @@ export default function KelolaKategori() {
       <div className="card p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <span className="text-xs font-semibold text-navy-600 dark:text-navy-300 whitespace-nowrap flex items-center gap-1.5 mr-1">
-            <Filter className="w-3.5 h-3.5 text-primary" />
+            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             Kelompok:
           </span>
           <button

@@ -1,4 +1,9 @@
+import { useNeo } from '../context/NeoContext'
+
 export default function StatCard({ label, value, icon: Icon, color = 'primary', loading = false }) {
+  const { workspaceMode } = useNeo()
+  const isNeo = workspaceMode === 'neo'
+
   const colorMap = {
     primary: { bg: 'bg-primary-50 dark:bg-primary-900/30', text: 'text-primary dark:text-primary-200', icon: 'text-primary dark:text-primary-300' },
     blue: { bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', icon: 'text-blue-500 dark:text-blue-400' },
@@ -11,11 +16,11 @@ export default function StatCard({ label, value, icon: Icon, color = 'primary', 
   const c = colorMap[color] || colorMap.primary
 
   return (
-    <div className="card card-hover p-5">
+    <div className={`${isNeo ? 'neo-window neo-stat-widget' : 'card card-hover'} p-5`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
-          <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
+          <p className="text-2xl font-bold mt-1.5" style={{ color: 'var(--text-primary)' }}>
             {loading ? <span className="skeleton h-7 w-12 inline-block" /> : value}
           </p>
         </div>

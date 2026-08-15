@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\LetterRequest;
+use App\Models\LetterCategory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
 
@@ -47,6 +49,97 @@ class DocumentGeneratorService
     public static function generate(LetterRequest $letterRequest): ?string
     {
         return self::generatePengantar($letterRequest);
+    }
+
+    /**
+     * Generate nomor surat for pengantar
+     * Format: {nomor_urut}/STMIK-BDG/{prodi_wk3}/{bulan_romawi}/{tahun}
+     * 
+     * @param LetterRequest $letterRequest
+     * @return string Generated nomor surat
+     */
+    public static function generateNomorSurat(LetterRequest $letterRequest): string
+    {
+        $letterRequest->loadMissing(['category']);
+        $category = $letterRequest->category;
+
+        // Get prodi_wk3 based on category group
+        $prodiWk3 = self::getProdiWk3($category);
+
+        // Get current month in Roman numerals
+        $now = Carbon::now();
+        $bulanRomawi = self::getBulanRomawi($now->month);
+
+        // Get current year
+        $tahun = $now->year;
+
+        // Get next sequence number
+        $nomorUrut = self::getNextNomorUrut($category);
+
+        // Format: 0042/STMIK-BDG/WK-III/E/VIII/2026
+        $nomorSurat = sprintf('%04d/STMIK-BDG/%s/E/%s/%d', $nomorUrut, $prodiWk3, $bulanRomawi, $tahun);
+
+        return $nomorSurat;
+    }
+
+    /**
+     * Get prodi_wk3 based on category group
+     * Akademik -> PRODI, Kemahasiswaan -> WK-3
+     */
+    private static function getProdiWk3(?LetterCategory $category): string
+    {
+        if (!$category) {
+            return 'PRODI';
+        }
+
+        $grupKategori = strtolower(trim($category->grup_kategori ?? ''));
+
+        if ($grupKategori === 'kemahasiswaan') {
+            return 'WK-3';
+        }
+
+        return 'PRODI';
+    }
+
+    /**
+     * Convert month number to Roman numerals
+     */
+    private static function getBulanRomawi(int $month): string
+    {
+        $romanNumerals = [
+            1 => 'I',
+            2 => 'II',
+            3 => 'III',
+            4 => 'IV',
+            5 => 'V',
+            6 => 'VI',
+            7 => 'VII',
+            8 => 'VIII',
+            9 => 'IX',
+            10 => 'X',
+            11 => 'XI',
+            12 => 'XII',
+        ];
+
+        return $romanNumerals[$month] ?? (string) $month;
+    }
+
+    /**
+     * Get next sequence number for letter requests (selesai status) within current month
+     */
+    private static function getNextNomorUrut(LetterCategory $category): int
+    {
+        $now = Carbon::now();
+
+        // Count all completed letter requests for this category in current month
+        $count = LetterRequest::where('category_id', $category->id)
+            ->where('status', 'selesai')
+            ->whereMonth('updated_at', $now->month)
+            ->whereYear('updated_at', $now->year)
+            ->count();
+
+        // Next number is count + 1
+        return $count + 1;
     }
 
     /**
@@ -117,6 +210,16 @@ class DocumentGeneratorService
             }
             $dataMap['tanggal'] = $formattedDate;
             $dataMap['tanggal_pengajuan'] = $formattedDate;
+
+            // Add nomor surat only for pengantar (when prefix is 'pengantar' and status is selesai)
+            if ($prefix === 'pengantar' && $letterRequest->status === 'selesai') {
+                // Use existing nomor_surat or generate new one
+                if (empty($letterRequest->nomor_surat)) {
+                    $letterRequest->nomor_surat = self::generateNomorSurat($letterRequest);
+                }
+                $dataMap['nomor_surat'] = $letterRequest->nomor_surat;
+                $dataMap['nomor'] = $letterRequest->nomor_surat;
+            }
 
             // Add dynamic form values
             if ($letterRequest->values) {

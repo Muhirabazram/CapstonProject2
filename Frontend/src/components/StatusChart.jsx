@@ -1,3 +1,5 @@
+import { useNeo } from '../context/NeoContext'
+
 const statusColors = {
   diajukan: { bg: 'bg-blue-500', light: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-600 dark:text-blue-400' },
   diterima: { bg: 'bg-teal-500', light: 'bg-teal-100 dark:bg-teal-900/40', text: 'text-teal-600 dark:text-teal-400' },
@@ -7,6 +9,9 @@ const statusColors = {
 }
 
 export default function StatusChart({ requests }) {
+  const { workspaceMode } = useNeo()
+  const isNeo = workspaceMode === 'neo'
+
   const counts = { diajukan: 0, diterima: 0, diproses: 0, ditolak: 0, selesai: 0 }
   requests.forEach((r) => { if (counts[r.status] !== undefined) counts[r.status]++ })
   const total = requests.length || 1
@@ -20,15 +25,15 @@ export default function StatusChart({ requests }) {
   ]
 
   return (
-    <div className="card p-6">
+    <div className={`${isNeo ? 'neo-window' : 'card'} p-5`}>
       <h3 className="section-title mb-4">Status Pengajuan</h3>
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {data.map((d) => {
           const c = statusColors[d.key]
           return (
             <div key={d.key} className="flex items-center gap-3">
-              <span className="text-xs font-medium w-20" style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
-              <div className="flex-1 h-6 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+              <span className="text-xs font-medium w-20 shrink-0" style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
+              <div className="flex-1 h-5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 <div
                   className={`h-full ${c.bg} rounded-full transition-all duration-500`}
                   style={{ width: `${(d.count / total) * 100}%`, minWidth: d.count > 0 ? '8px' : '0' }}

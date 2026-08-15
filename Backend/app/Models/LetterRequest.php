@@ -12,6 +12,7 @@ class LetterRequest extends Model
     protected $fillable = [
         'mahasiswa_id',
         'category_id',
+        'nomor_surat',
         'status',
         'tanggal_pengajuan',
         'file_hasil_path',

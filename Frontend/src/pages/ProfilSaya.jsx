@@ -95,7 +95,7 @@ export default function ProfilSaya() {
   const passwordSection = (
     <form onSubmit={handleChangePassword} className="card p-6 space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <Lock className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+        <Lock className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
         <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Ubah Password</h3>
       </div>
 
@@ -110,7 +110,7 @@ export default function ProfilSaya() {
             placeholder="Masukkan password saat ini"
             required
           />
-          <button type="button" onClick={() => setShowPw({ ...showPw, current: !showPw.current })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+          <button type="button" onClick={() => setShowPw({ ...showPw, current: !showPw.current })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
             {showPw.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function ProfilSaya() {
               required
               minLength={6}
             />
-            <button type="button" onClick={() => setShowPw({ ...showPw, new: !showPw.new })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+            <button type="button" onClick={() => setShowPw({ ...showPw, new: !showPw.new })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
               {showPw.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -145,7 +145,7 @@ export default function ProfilSaya() {
               placeholder="Ulangi password baru"
               required
             />
-            <button type="button" onClick={() => setShowPw({ ...showPw, confirm: !showPw.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
+            <button type="button" onClick={() => setShowPw({ ...showPw, confirm: !showPw.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }}>
               {showPw.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -179,9 +179,7 @@ export default function ProfilSaya() {
       <div className="card p-6">
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="w-24 h-24 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-primary dark:text-primary-200 font-bold text-3xl">
-              {name.charAt(0).toUpperCase()}
-            </span>
+            <User className="w-10 h-10 text-primary dark:text-primary-200" />
           </div>
           <div className="text-center sm:text-left flex-1">
             <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{name}</h3>

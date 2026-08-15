@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { useNeo } from '../context/NeoContext'
 import { useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Sun, Moon, LogIn } from 'lucide-react'
+import { Eye, EyeOff, Sun, Moon, LogIn, GraduationCap } from 'lucide-react'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -12,7 +13,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { workspaceMode } = useNeo()
   const navigate = useNavigate()
+  const isNeo = workspaceMode === 'neo'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,7 +33,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className={`min-h-screen flex relative ${isNeo ? '' : ''}`} style={{ backgroundColor: isNeo ? 'transparent' : 'var(--bg-primary)' }}>
       {/* Left Panel - Background Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
@@ -55,31 +58,35 @@ export default function Login() {
 
       {/* Right Panel - Form */}
       <div className="flex-1 flex items-center justify-center p-6 relative">
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
+        {/* Top Controls */}
+        <div className="absolute top-5 right-5 flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
 
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          <div className={`lg:hidden text-center mb-8 ${isNeo ? 'neo-page-enter neo-stagger-1' : ''}`}>
             <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-white">SI</span>
+              <GraduationCap className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>SIASMA</h1>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>STMIK Bandung</p>
           </div>
 
-          <div className="mb-8">
+          <div className={`mb-8 ${isNeo ? 'neo-page-enter neo-stagger-2' : ''}`}>
             <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Masuk ke Akun</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Masukkan kredensial Anda untuk melanjutkan</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+              Masukkan kredensial Anda untuk mengelola surat administrasi
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className={`space-y-5 ${isNeo ? 'neo-page-enter neo-stagger-3' : ''}`}>
             {error && (
               <div className="px-4 py-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
                 {error}
@@ -88,14 +95,14 @@ export default function Login() {
 
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                NPM / Username
+                NIM / Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="input-base"
-                placeholder="Masukkan NPM atau Username"
+                placeholder="Masukkan NIM atau Username"
                 required
                 autoComplete="username"
               />
@@ -119,7 +126,7 @@ export default function Login() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800"
-                  style={{ color: 'var(--text-muted)' }}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -129,7 +136,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-3"
+              className={`${isNeo ? 'neo-btn' : ''} btn-primary w-full flex items-center justify-center gap-2 py-3`}
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -142,7 +149,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-xs mt-8" style={{ color: 'var(--text-muted)' }}>
+          <p className={`text-center text-xs mt-8 ${isNeo ? 'neo-page-enter neo-stagger-4' : ''}`} style={{ color: 'var(--text-muted)' }}>
             Lupa password? Hubungi Bagian Akademik
           </p>
         </div>
