@@ -82,7 +82,7 @@ export default function Login() {
           <div className={`mb-8 ${isNeo ? 'neo-page-enter neo-stagger-2' : ''}`}>
             <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Masuk ke Akun</h2>
             <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              'Masukkan kredensial Anda untuk mengelola surat administrasi'
+              Masukkan kredensial Anda untuk mengelola surat administrasi
             </p>
           </div>
 
