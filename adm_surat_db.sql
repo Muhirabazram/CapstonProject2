@@ -793,6 +793,8 @@ COPY public.letter_categories (id, nama_kategori, deskripsi, file_template_path,
 --
 
 COPY public.letter_request_requirements (id, request_id, requirement_id, file_path, created_at, updated_at) FROM stdin;
+52	26	78	requirements_uploads/1786808833_req_78_ChatGPT Image Aug 10, 2026, 10_10_46 AM.png	2026-08-15 15:47:13	2026-08-15 15:47:13
+53	26	79	requirements_uploads/1786808833_req_79_alur cp2.pdf	2026-08-15 15:47:13	2026-08-15 15:47:13
 \.
 
 
@@ -801,6 +803,9 @@ COPY public.letter_request_requirements (id, request_id, requirement_id, file_pa
 --
 
 COPY public.letter_request_values (id, request_id, variable_id, nilai_isian, created_at, updated_at) FROM stdin;
+80	26	111	5	2026-08-15 15:47:13	2026-08-15 15:47:13
+81	26	112	Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi RI	2026-08-15 15:47:13	2026-08-15 15:47:13
+82	26	113	Beasiswa Unggulan Masyarakat Berprestasi Tahun 2026	2026-08-15 15:47:13	2026-08-15 15:47:13
 \.
 
 
@@ -815,6 +820,7 @@ COPY public.letter_requests (id, mahasiswa_id, category_id, status, tanggal_peng
 5	1	1	selesai	2026-08-08	generated_letters/surat_5_1786167439.docx	2026-08-08 05:37:04	2026-08-08 05:37:19	signatures/1786167424_ttd_1.jpeg	\N	\N	\N
 6	1	1	selesai	2026-08-08	generated_letters/surat_6_1786167809.docx	2026-08-08 05:38:43	2026-08-08 05:43:29	signatures/1786167523_ttd_1.jpeg	\N	\N	\N
 7	1	1	selesai	2026-08-08	generated_letters/surat_7_1786168325.docx	2026-08-08 05:49:00	2026-08-08 05:52:05	signatures/1786168140_ttd_1.jpeg	\N	\N	\N
+26	1	7	selesai	2026-08-15	generated_letters/pengantar_26_1786809011.docx	2026-08-15 15:47:13	2026-08-15 15:50:11	signatures/1786808833_ttd_1.jpeg	\N	generated_letters/permohonan_26_1786809002.docx	0013/STMIK-BDG/WK-3/E/VIII/2026
 18	1	3	ditolak	2026-08-10	\N	2026-08-10 04:37:43	2026-08-14 04:47:25	\N	coba email	generated_letters/permohonan_18_1786682845.docx	\N
 21	1	1	selesai	2026-08-12	generated_letters/surat_21_1786679246.docx	2026-08-12 07:21:55	2026-08-14 04:47:34	signatures/1786519315_ttd_1.jpeg	ahjhzajhha	generated_letters/permohonan_21_1786682854.docx	\N
 20	1	3	selesai	2026-08-12	generated_letters/surat_20_1786518976.docx	2026-08-12 07:15:37	2026-08-14 05:39:42	\N	\N	generated_letters/permohonan_20_1786685982.docx	\N
@@ -827,9 +833,9 @@ COPY public.letter_requests (id, mahasiswa_id, category_id, status, tanggal_peng
 14	1	3	ditolak	2026-08-10	generated_letters/surat_14_1786333216.docx	2026-08-10 03:39:59	2026-08-10 03:45:58	\N	Nomor HP belum ada	\N	\N
 15	1	3	selesai	2026-08-10	generated_letters/surat_15_1786333589.docx	2026-08-10 03:46:12	2026-08-10 03:46:29	\N	\N	\N	\N
 16	1	3	ditolak	2026-08-10	generated_letters/surat_16_1786333698.docx	2026-08-10 03:47:55	2026-08-10 03:51:08	\N	no HP kosong	\N	\N
-25	1	7	selesai	2026-08-15	generated_letters/pengantar_25_1786805819.docx	2026-08-15 14:35:39	2026-08-15 14:56:59	signatures/1786804539_ttd_1.jpeg	\N	generated_letters/permohonan_25_1786804637.docx	0001/STMIK-BDG/WK-3/E/VIII/2026
+24	1	3	selesai	2026-08-14	generated_letters/pengantar_24_1786809041.docx	2026-08-14 05:52:28	2026-08-15 15:50:41	signatures/1786686747_ttd_1.jpeg	\N	generated_letters/permohonan_24_1786799815.docx	0014/STMIK-BDG/PRODI/E/VIII/2026
 17	1	3	ditolak	2026-08-10	generated_letters/surat_17_1786334267.docx	2026-08-10 03:51:20	2026-08-10 04:31:04	\N	mencoba	\N	\N
-24	1	3	diajukan	2026-08-14	generated_letters/pengantar_24_1786687061.docx	2026-08-14 05:52:28	2026-08-15 13:16:55	signatures/1786686747_ttd_1.jpeg	\N	generated_letters/permohonan_24_1786799815.docx	\N
+25	1	7	selesai	2026-08-15	generated_letters/pengantar_25_1786805819.docx	2026-08-15 14:35:39	2026-08-15 15:45:59	signatures/1786804539_ttd_1.jpeg	\N	generated_letters/permohonan_25_1786808759.docx	0001/STMIK-BDG/WK-3/E/VIII/2026
 \.
 
 
@@ -969,14 +975,14 @@ COPY public.password_reset_tokens (username, token, created_at) FROM stdin;
 --
 
 COPY public.personal_access_tokens (id, tokenable_type, tokenable_id, name, token, abilities, last_used_at, expires_at, created_at, updated_at) FROM stdin;
-18	App\\Models\\User	2	auth_token	744aaf0a0547997881e99fd2753c437c5be3819a75a11afa15aba2866dbfd0ae	["*"]	2026-08-15 15:39:31	\N	2026-08-15 14:00:45	2026-08-15 15:39:31
-12	App\\Models\\User	1	auth_token	8f3fb1978a936a0b341d7deed4cc7abe9c0a0a98c56b2a61c7048efd31057c67	["*"]	2026-08-15 15:39:50	\N	2026-08-10 02:42:05	2026-08-15 15:39:50
 17	App\\Models\\User	2	auth_token	1431f7992fced5085d9aaa3216de55812c03c1acd4b89f051318a5281c9ed97e	["*"]	2026-08-15 13:39:52	\N	2026-08-15 13:09:15	2026-08-15 13:39:52
 15	App\\Models\\User	2	auth_token	68b69d4f929ef7d7d0a5db497c968ef1186312da4071e047892138194f95ac45	["*"]	2026-08-12 09:12:17	\N	2026-08-12 07:13:49	2026-08-12 09:12:17
 16	App\\Models\\User	2	auth_token	3ff0530501c82d16fcdc0a263cf0be23555097e3e899a77e9408a60b9ec8cc8f	["*"]	2026-08-14 06:08:01	\N	2026-08-14 03:59:15	2026-08-14 06:08:01
 10	App\\Models\\User	2	auth_token	53ced29baff9bcff4ac21aea52f40432bc8a6944dfe5600e2a5978c656c067b1	["*"]	2026-08-09 07:20:11	\N	2026-08-09 07:05:44	2026-08-09 07:20:11
 7	App\\Models\\User	2	auth_token	9615895f9939f155ef3e97cf2030faeaf0ed6c5bbfd12d854feb93a4ce095208	["*"]	2026-08-08 06:50:44	\N	2026-08-08 06:40:41	2026-08-08 06:50:44
 13	App\\Models\\User	2	auth_token	6cc8fdd9184325f2b87a9b0e57c6f1c256870099ed2dc2fb6c1306c20103740f	["*"]	2026-08-10 06:08:07	\N	2026-08-10 02:46:59	2026-08-10 06:08:07
+12	App\\Models\\User	1	auth_token	8f3fb1978a936a0b341d7deed4cc7abe9c0a0a98c56b2a61c7048efd31057c67	["*"]	2026-08-15 15:59:40	\N	2026-08-10 02:42:05	2026-08-15 15:59:40
+18	App\\Models\\User	2	auth_token	744aaf0a0547997881e99fd2753c437c5be3819a75a11afa15aba2866dbfd0ae	["*"]	2026-08-15 15:59:43	\N	2026-08-15 14:00:45	2026-08-15 15:59:43
 \.
 
 
@@ -1058,21 +1064,21 @@ SELECT pg_catalog.setval('public.letter_categories_id_seq', 9, true);
 -- Name: letter_request_requirements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.letter_request_requirements_id_seq', 51, true);
+SELECT pg_catalog.setval('public.letter_request_requirements_id_seq', 53, true);
 
 
 --
 -- Name: letter_request_values_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.letter_request_values_id_seq', 79, true);
+SELECT pg_catalog.setval('public.letter_request_values_id_seq', 82, true);
 
 
 --
 -- Name: letter_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.letter_requests_id_seq', 25, true);
+SELECT pg_catalog.setval('public.letter_requests_id_seq', 26, true);
 
 
 --

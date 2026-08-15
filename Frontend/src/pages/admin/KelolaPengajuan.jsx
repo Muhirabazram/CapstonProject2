@@ -1,17 +1,17 @@
-import { useState, useEffect, useMemo } from 'react'
+import { Calendar, Download, Eye, FileText, RotateCcw, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
-import Modal from '../../components/Modal'
-import DocumentPreviewModal from '../../components/DocumentPreviewModal'
-import StatusBadge from '../../components/StatusBadge'
-import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import DocumentPreviewModal from '../../components/DocumentPreviewModal'
+import EmptyState from '../../components/EmptyState'
+import Modal from '../../components/Modal'
 import { SkeletonTable } from '../../components/Skeleton'
+import StatusBadge from '../../components/StatusBadge'
 import { useToast } from '../../context/ToastContext'
-import { Eye, Download, Search, Filter, FileText, RotateCcw, Calendar, X } from 'lucide-react'
 
 function formatDate(d) {
   if (!d) return '-'
-  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
   const dt = new Date(d)
   return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`
 }
@@ -57,7 +57,7 @@ export default function KelolaPengajuan() {
     fetchRequests()
     api.get('/admin/categories').then((r) => {
       setCategoriesList(r.data.data || [])
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   const availableCategories = useMemo(() => {
@@ -267,8 +267,7 @@ export default function KelolaPengajuan() {
   }
 
   const statusCounts = {
-    diajukan: requests.filter(r => r.status === 'diajukan').length,
-    diterima: requests.filter(r => r.status === 'diterima').length,
+    diterima: requests.filter(r => r.status === 'diterima' || r.status === 'diajukan').length,
     diproses: requests.filter(r => r.status === 'diproses').length,
     ditolak: requests.filter(r => r.status === 'ditolak').length,
     selesai: requests.filter(r => r.status === 'selesai').length,
@@ -308,7 +307,6 @@ export default function KelolaPengajuan() {
           {/* Status Filter */}
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base text-sm w-full sm:w-36">
             <option value="">Semua Status</option>
-            <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
             <option value="diterima">Diterima ({statusCounts.diterima})</option>
             <option value="diproses">Diproses ({statusCounts.diproses})</option>
             <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
@@ -555,11 +553,11 @@ export default function KelolaPengajuan() {
               </div>
             </div>
 
-            {/* Surat Pengantar (Hasil ACC) */}
+            {/* Surat Pengantar (Hasil) */}
             {selected.file_hasil_path && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="section-title">Surat Pengantar (Surat Resmi ACC)</h4>
+                  <h4 className="section-title">Surat Pengantar Resmi</h4>
                   <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
                     ✓ Surat Pengantar telah diberikan ke Mahasiswa
                   </span>
@@ -622,9 +620,8 @@ export default function KelolaPengajuan() {
                     onChange={(e) => { setNewStatus(e.target.value); setDetailError(''); setFileSurat(null) }}
                     className="select-base"
                   >
-                    <option value="diajukan">Diajukan</option>
-                    <option value="diproses">Diproses</option>
                     <option value="diterima">Diterima</option>
+                    <option value="diproses">Diproses</option>
                     <option value="selesai">Selesai</option>
                     <option value="ditolak">Ditolak</option>
                   </select>

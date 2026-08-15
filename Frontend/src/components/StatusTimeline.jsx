@@ -1,13 +1,12 @@
 import { useNeo } from '../context/NeoContext'
 
 const steps = [
-  { key: 'diajukan', label: 'Diajukan' },
-  { key: 'diproses', label: 'Diproses' },
   { key: 'diterima', label: 'Diterima' },
+  { key: 'diproses', label: 'Diproses' },
   { key: 'selesai', label: 'Selesai' },
 ]
 
-const statusOrder = ['diajukan', 'diproses', 'diterima', 'selesai']
+const statusOrder = ['diterima', 'diproses', 'selesai']
 
 export default function StatusTimeline({ currentStatus }) {
   const { workspaceMode } = useNeo()

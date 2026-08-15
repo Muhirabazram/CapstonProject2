@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('mahasiswa_id')->constrained('mahasiswas')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('letter_categories')->onDelete('cascade');
-            $table->enum('status', ['diajukan', 'diterima', 'diproses', 'ditolak', 'selesai'])->default('diajukan');
+            $table->enum('status', ['diterima', 'diproses', 'ditolak', 'selesai'])->default('diterima');
             $table->date('tanggal_pengajuan');
             $table->string('file_hasil_path', 255)->nullable();
             $table->timestamps();

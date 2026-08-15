@@ -62,8 +62,7 @@ export default function RiwayatStatus() {
 
   const statusCounts = useMemo(() => {
     return {
-      diajukan: requests.filter(r => r.status === 'diajukan').length,
-      diterima: requests.filter(r => r.status === 'diterima').length,
+      diterima: requests.filter(r => r.status === 'diterima' || r.status === 'diajukan').length,
       diproses: requests.filter(r => r.status === 'diproses').length,
       ditolak: requests.filter(r => r.status === 'ditolak').length,
       selesai: requests.filter(r => r.status === 'selesai').length,
@@ -249,7 +248,6 @@ export default function RiwayatStatus() {
             {/* Status Filter */}
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-base text-sm w-full sm:w-36">
               <option value="">Semua Status</option>
-              <option value="diajukan">Diajukan ({statusCounts.diajukan})</option>
               <option value="diterima">Diterima ({statusCounts.diterima})</option>
               <option value="diproses">Diproses ({statusCounts.diproses})</option>
               <option value="ditolak">Ditolak ({statusCounts.ditolak})</option>
@@ -495,7 +493,7 @@ export default function RiwayatStatus() {
               {/* Download Result & Preview Surat Pengantar */}
               {selected.status === 'selesai' && (
                 <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                  <h4 className="section-title text-xs text-emerald-600 dark:text-emerald-400">✉️ Surat Pengantar Resmi (ACC)</h4>
+                  <h4 className="section-title text-xs text-emerald-600 dark:text-emerald-400">✉️ Surat Pengantar Resmi</h4>
                   <button
                     onClick={() => handlePreviewResult(selected)}
                     className="btn-secondary w-full flex items-center justify-center gap-2"

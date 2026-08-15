@@ -72,9 +72,9 @@ export default function NotificationBell({ role = 'mahasiswa' }) {
   const notifications = useMemo(() => {
     if (!requests || requests.length === 0) return []
 
-    // Admin only sees incoming requests with status 'diajukan'
+    // Admin only sees incoming requests with status 'diterima'
     const filteredList = role === 'admin'
-      ? requests.filter((r) => r.status === 'diajukan')
+      ? requests.filter((r) => r.status === 'diterima' || r.status === 'diajukan')
       : requests
 
     return filteredList.map((req) => {

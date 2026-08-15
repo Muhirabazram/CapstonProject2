@@ -55,7 +55,7 @@ class RequestController extends Controller
             $letterRequest = LetterRequest::create([
                 'mahasiswa_id' => $mahasiswa->id,
                 'category_id' => $request->category_id,
-                'status' => 'diajukan',
+                'status' => 'diterima',
                 'tanggal_pengajuan' => now()->toDateString(),
                 'file_ttd_digital_path' => $sigPath,
             ]);

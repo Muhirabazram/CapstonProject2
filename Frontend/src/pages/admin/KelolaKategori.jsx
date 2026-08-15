@@ -398,7 +398,7 @@ export default function KelolaKategori() {
                 <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
                   2. Template Surat Pengantar (.docx)
                 </label>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Dibuat saat Admin menyetujui (ACC) surat.</p>
+                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Dibuat saat Admin menyetujui surat.</p>
                 <input
                   type="file"
                   accept=".docx"

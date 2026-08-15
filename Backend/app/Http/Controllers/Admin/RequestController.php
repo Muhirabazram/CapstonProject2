@@ -39,7 +39,7 @@ class RequestController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:diajukan,diterima,diproses,ditolak,selesai',
+            'status' => 'required|in:diterima,diproses,ditolak,selesai',
             'file_surat' => 'nullable|file|mimes:docx,doc,pdf|max:20480',
             'alasan_penolakan' => 'nullable|string|max:1000',
         ]);

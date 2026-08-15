@@ -45,8 +45,7 @@ export default function AdminDashboard() {
 
   const stats = {
     total: requests.length,
-    diajukan: requests.filter((r) => r.status === 'diajukan').length,
-    diterima: requests.filter((r) => r.status === 'diterima').length,
+    diterima: requests.filter((r) => r.status === 'diterima' || r.status === 'diajukan').length,
     diproses: requests.filter((r) => r.status === 'diproses').length,
     ditolak: requests.filter((r) => r.status === 'ditolak').length,
     selesai: requests.filter((r) => r.status === 'selesai').length,
@@ -54,7 +53,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { label: 'Total Pengajuan', value: stats.total, icon: FileText, color: 'primary' },
-    { label: 'Menunggu', value: stats.diajukan, icon: Clock, color: 'blue' },
+    { label: 'Diterima', value: stats.diterima, icon: Clock, color: 'blue' },
     { label: 'Diproses', value: stats.diproses, icon: Loader, color: 'amber' },
     { label: 'Selesai', value: stats.selesai, icon: CheckCircle, color: 'green' },
     { label: 'Ditolak', value: stats.ditolak, icon: XCircle, color: 'red' },
