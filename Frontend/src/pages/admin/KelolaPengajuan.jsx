@@ -112,11 +112,18 @@ export default function KelolaPengajuan() {
     }).catch(() => toast.error('Gagal mengunduh dokumen'))
   }
 
-  const handlePreviewReqDoc = async (id) => {
+  const handlePreviewReqDoc = async (rr) => {
     try {
-      const response = await api.get(`/documents/requirement/${id}`, { responseType: 'blob' })
+      const item = typeof rr === 'object' ? rr : { id: rr }
+      if (item.file_path) {
+        window.open(`/storage/${item.file_path}`, '_blank')
+        return
+      }
+      const response = await api.get(`/documents/requirement/${item.id}`, { responseType: 'blob' })
       if (response.data.size === 0) throw new Error('File kosong')
-      const url = URL.createObjectURL(response.data)
+      const contentType = response.headers['content-type'] || 'application/octet-stream'
+      const blob = new Blob([response.data], { type: contentType })
+      const url = URL.createObjectURL(blob)
       window.open(url, '_blank')
       setTimeout(() => URL.revokeObjectURL(url), 10000)
     } catch {
@@ -467,7 +474,7 @@ export default function KelolaPengajuan() {
                       {rr.file_path && (
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => handlePreviewReqDoc(rr.id)}
+                            onClick={() => handlePreviewReqDoc(rr)}
                             className="btn-ghost btn-sm flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                             title="Lihat"
                           >

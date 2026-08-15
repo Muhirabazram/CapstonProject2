@@ -53,7 +53,7 @@ class DocumentGeneratorService
 
     /**
      * Generate nomor surat for pengantar
-     * Format: {nomor_urut}/STMIK-BDG/{prodi_wk3}/{bulan_romawi}/{tahun}
+     * Format: {nomor_urut}/STMIK-BDG/{prodi_wk3}/E/{bulan_romawi}/{tahun}
      * 
      * @param LetterRequest $letterRequest
      * @return string Generated nomor surat
@@ -63,23 +63,19 @@ class DocumentGeneratorService
         $letterRequest->loadMissing(['category']);
         $category = $letterRequest->category;
 
-        // Get prodi_wk3 based on category group
+        // Get prodi_wk3 based on category group (Akademik -> PRODI, Kemahasiswaan -> WK-3)
         $prodiWk3 = self::getProdiWk3($category);
 
-        // Get current month in Roman numerals
+        // Get current month in Roman numerals & current year
         $now = Carbon::now();
         $bulanRomawi = self::getBulanRomawi($now->month);
-
-        // Get current year
         $tahun = $now->year;
 
-        // Get next sequence number
+        // Get next sequence number (+1 per ACC/selesai request)
         $nomorUrut = self::getNextNomorUrut($category);
 
-        // Format: 0042/STMIK-BDG/WK-III/E/VIII/2026
-        $nomorSurat = sprintf('%04d/STMIK-BDG/%s/E/%s/%d', $nomorUrut, $prodiWk3, $bulanRomawi, $tahun);
-
-        return $nomorSurat;
+        // Format: 0042/STMIK-BDG/WK-3/E/VIII/2026
+        return sprintf('%04d/STMIK-BDG/%s/E/%s/%d', $nomorUrut, $prodiWk3, $bulanRomawi, $tahun);
     }
 
     /**
@@ -125,20 +121,17 @@ class DocumentGeneratorService
     }
 
     /**
-     * Get next sequence number for letter requests (selesai status) within current month
+     * Get next sequence number for letter requests with status 'selesai'
      */
-    private static function getNextNomorUrut(LetterCategory $category): int
+    private static function getNextNomorUrut(?LetterCategory $category = null): int
     {
         $now = Carbon::now();
 
-        // Count all completed letter requests for this category in current month
-        $count = LetterRequest::where('category_id', $category->id)
-            ->where('status', 'selesai')
-            ->whereMonth('updated_at', $now->month)
+        // Count all completed letter requests in current year (+1 for next)
+        $count = LetterRequest::where('status', 'selesai')
             ->whereYear('updated_at', $now->year)
             ->count();
 
-        // Next number is count + 1
         return $count + 1;
     }
 
@@ -211,14 +204,33 @@ class DocumentGeneratorService
             $dataMap['tanggal'] = $formattedDate;
             $dataMap['tanggal_pengajuan'] = $formattedDate;
 
-            // Add nomor surat only for pengantar (when prefix is 'pengantar' and status is selesai)
-            if ($prefix === 'pengantar' && $letterRequest->status === 'selesai') {
-                // Use existing nomor_surat or generate new one
+            // Letter numbering variables
+            $grupKategori = strtolower(trim($letterRequest->category?->grup_kategori ?? ''));
+            $prodiWk3 = ($grupKategori === 'kemahasiswaan') ? 'WK-3' : 'PRODI';
+            $now = Carbon::now();
+            $bulanRomawi = self::getBulanRomawi($now->month);
+            $tahun = $now->year;
+
+            $dataMap['prodi_wk3'] = $prodiWk3;
+            $dataMap['bulan_romawi'] = $bulanRomawi;
+            $dataMap['tahun'] = (string)$tahun;
+
+            if ($prefix === 'pengantar' && ($letterRequest->status === 'selesai' || !empty($letterRequest->nomor_surat))) {
                 if (empty($letterRequest->nomor_surat)) {
                     $letterRequest->nomor_surat = self::generateNomorSurat($letterRequest);
+                    $letterRequest->save();
                 }
-                $dataMap['nomor_surat'] = $letterRequest->nomor_surat;
-                $dataMap['nomor'] = $letterRequest->nomor_surat;
+
+                $seqStr = '0001';
+                if (preg_match('/^(\d+)/', $letterRequest->nomor_surat, $matches)) {
+                    $seqStr = sprintf('%04d', (int)$matches[1]);
+                }
+
+                $dataMap['nomor_surat'] = $seqStr;
+                $dataMap['nomor_urut'] = $seqStr;
+                $dataMap['nomor'] = $seqStr;
+                $dataMap['nomor_lengkap'] = $letterRequest->nomor_surat;
+                $dataMap['nomor_full'] = $letterRequest->nomor_surat;
             }
 
             // Add dynamic form values
