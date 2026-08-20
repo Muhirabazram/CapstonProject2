@@ -38,6 +38,11 @@ class RequestController extends Controller
             'requirements' => 'nullable|array',
             'requirements.*.requirement_id' => 'required|exists:letter_requirements,id',
             'requirements.*.file' => 'nullable|file|max:10240',
+        ], [
+            'file_ttd_digital.max' => 'Ukuran file tanda tangan digital maksimal 5MB.',
+            'file_ttd_digital.mimes' => 'File tanda tangan digital harus berupa gambar (PNG, JPG, atau JPEG).',
+            'requirements.*.file.max' => 'Ukuran file dokumen prasyarat tidak boleh melebihi 10MB.',
+            'requirements.*.file.file' => 'Dokumen prasyarat harus berupa file yang valid.',
         ]);
 
         return DB::transaction(function () use ($request, $mahasiswa) {

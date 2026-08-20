@@ -33,7 +33,7 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nim' => 'required|string|max:20|unique:mahasiswas,nim',
+            'nim' => 'required|string|max:20|unique:mahasiswas,nim|unique:users,username',
             'nama' => 'required|string|max:255',
             'prodi' => 'required|string|max:255',
             'angkatan' => 'nullable|string|max:10',
@@ -42,10 +42,16 @@ class StudentController extends Controller
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
             'alamat' => 'nullable|string|max:500',
-            'email' => 'nullable|email|max:100',
+            'email' => 'nullable|email|max:100|unique:mahasiswas,email',
             'no_hp' => 'nullable|string|max:20',
             'dosen_wali' => 'nullable|string|max:100',
             'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
+        ], [
+            'nim.required' => 'NIM wajib diisi.',
+            'nim.unique' => 'NIM atau Email sudah terdaftar dalam sistem.',
+            'email.unique' => 'NIM atau Email sudah terdaftar dalam sistem.',
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'prodi.required' => 'Program studi wajib diisi.',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -99,10 +105,16 @@ class StudentController extends Controller
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
             'alamat' => 'nullable|string|max:500',
-            'email' => 'nullable|email|max:100',
+            'email' => 'nullable|email|max:100|unique:mahasiswas,email,' . $id,
             'no_hp' => 'nullable|string|max:20',
             'dosen_wali' => 'nullable|string|max:100',
             'status_mahasiswa' => 'nullable|in:Aktif,Cuti,Lulus,Keluar',
+        ], [
+            'nim.required' => 'NIM wajib diisi.',
+            'nim.unique' => 'NIM atau Email sudah terdaftar dalam sistem.',
+            'email.unique' => 'NIM atau Email sudah terdaftar dalam sistem.',
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'prodi.required' => 'Program studi wajib diisi.',
         ]);
 
         $mahasiswa->update([
@@ -183,21 +195,30 @@ class StudentController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls,csv',
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'excel_file.required' => 'File Excel wajib diunggah.',
+            'excel_file.file' => 'File yang diunggah tidak valid.',
+            'excel_file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau CSV (.csv).',
+            'excel_file.max' => 'Ukuran file Excel tidak boleh melebihi 10MB.',
         ]);
 
         try {
-            Excel::import(new StudentsImport, $request->file('excel_file'));
+            $import = new StudentsImport();
+            DB::transaction(function () use ($import, $request) {
+                Excel::import($import, $request->file('excel_file'));
+            });
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data mahasiswa berhasil di-import. Username & Password default diset ke stmik[NIM].',
+                'imported_count' => $import->getImportedCount(),
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal meng-import data: ' . $e->getMessage(),
-            ], 500);
+                'message' => $e->getMessage(),
+            ], 422);
         }
     }
 }

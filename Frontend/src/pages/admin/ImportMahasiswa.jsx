@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Info, Key, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Users, X } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, FileSpreadsheet, Info, Key, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import api from '../../api/axios'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -24,6 +24,7 @@ export default function ImportMahasiswa() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [form, setForm] = useState(emptyForm)
+  const [formErrors, setFormErrors] = useState({})
   const [editId, setEditId] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -76,12 +77,16 @@ export default function ImportMahasiswa() {
       toast.error('Format file tidak didukung. Gunakan .xlsx, .xls, atau .csv')
       return
     }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`Ukuran file (${(file.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas maksimal 10MB!`)
+      return
+    }
     setImporting(true)
     const fd = new FormData()
     fd.append('excel_file', file)
     try {
-      await api.post('/admin/students/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      toast.success('Data mahasiswa berhasil di-import!')
+      const res = await api.post('/admin/students/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      toast.success(res.data?.message || 'Data mahasiswa berhasil di-import!')
       fetchStudents()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Gagal mengimport data')
@@ -100,7 +105,7 @@ export default function ImportMahasiswa() {
   const handleDragLeave = (e) => { e.preventDefault(); setDragging(false) }
   const handleFileInput = (e) => { handleFile(e.target.files[0]); e.target.value = '' }
 
-  const openAdd = () => { setForm(emptyForm); setEditId(null); setShowModal(true) }
+  const openAdd = () => { setForm(emptyForm); setFormErrors({}); setEditId(null); setShowModal(true) }
   const openEdit = (s) => {
     setForm({
       nim: s.nim, nama: s.nama, prodi: s.prodi,
@@ -113,12 +118,14 @@ export default function ImportMahasiswa() {
       no_hp: s.no_hp || '',
       dosen_wali: s.dosen_wali || '', status_mahasiswa: s.status_mahasiswa || 'Aktif',
     })
+    setFormErrors({})
     setEditId(s.id)
     setShowModal(true)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setFormErrors({})
     try {
       if (editId) {
         await api.put(`/admin/students/${editId}`, form)
@@ -130,7 +137,14 @@ export default function ImportMahasiswa() {
       setShowModal(false)
       fetchStudents()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Terjadi kesalahan')
+      if (err.response?.data?.errors) {
+        setFormErrors(err.response.data.errors)
+        const firstMsg = Object.values(err.response.data.errors)[0][0]
+        toast.error(firstMsg)
+      } else {
+        const msg = err.response?.data?.message || 'Terjadi kesalahan'
+        toast.error(msg)
+      }
     }
   }
 
@@ -385,7 +399,19 @@ export default function ImportMahasiswa() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>NIM <span className="text-red-500">*</span></label>
-              <input type="text" required value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} className="input-base w-full" placeholder="Masukkan NIM" />
+              <input
+                type="text"
+                required
+                value={form.nim}
+                onChange={(e) => { setForm({ ...form, nim: e.target.value }); setFormErrors((prev) => ({ ...prev, nim: null })) }}
+                className={`input-base w-full ${formErrors.nim ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                placeholder="Masukkan NIM"
+              />
+              {formErrors.nim && (
+                <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" /> {formErrors.nim[0]}
+                </p>
+              )}
               {!editId && form.nim && (
                 <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
                   Default Username & Password: <code className="font-mono font-bold">stmik{form.nim}</code>
@@ -394,15 +420,37 @@ export default function ImportMahasiswa() {
             </div>
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Lengkap <span className="text-red-500">*</span></label>
-              <input type="text" required value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} className="input-base w-full" placeholder="Masukkan nama" />
+              <input
+                type="text"
+                required
+                value={form.nama}
+                onChange={(e) => { setForm({ ...form, nama: e.target.value }); setFormErrors((prev) => ({ ...prev, nama: null })) }}
+                className={`input-base w-full ${formErrors.nama ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                placeholder="Masukkan nama"
+              />
+              {formErrors.nama && (
+                <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" /> {formErrors.nama[0]}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Program Studi <span className="text-red-500">*</span></label>
-              <select required value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} className="select-base w-full">
+              <select
+                required
+                value={form.prodi}
+                onChange={(e) => { setForm({ ...form, prodi: e.target.value }); setFormErrors((prev) => ({ ...prev, prodi: null })) }}
+                className={`select-base w-full ${formErrors.prodi ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+              >
                 <option value="">Pilih Program Studi</option>
                 <option value="Teknik Informatika">Teknik Informatika</option>
                 <option value="Sistem Informasi">Sistem Informasi</option>
               </select>
+              {formErrors.prodi && (
+                <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" /> {formErrors.prodi[0]}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Angkatan</label>
@@ -434,7 +482,18 @@ export default function ImportMahasiswa() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-base w-full" placeholder="email@contoh.com" />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors((prev) => ({ ...prev, email: null })) }}
+                  className={`input-base w-full ${formErrors.email ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  placeholder="email@contoh.com"
+                />
+                {formErrors.email && (
+                  <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 shrink-0" /> {formErrors.email[0]}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tempat Lahir</label>

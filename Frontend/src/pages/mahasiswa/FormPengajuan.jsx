@@ -96,7 +96,57 @@ export default function FormPengajuan() {
     }
   }
 
-  const handleFileChange = (reqId, file) => {
+  const handleFileChange = (reqId, file, requirement) => {
+    if (!file) {
+      setFiles((prev) => {
+        const next = { ...prev }
+        delete next[reqId]
+        return next
+      })
+      return
+    }
+
+    // Size limit: 10MB
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+      setErrors((prev) => ({
+        ...prev,
+        [`req_${reqId}`]: `Ukuran file (${sizeMB} MB) melebihi batas maksimal 10MB`,
+      }))
+      toast.error(`Ukuran file "${file.name}" (${sizeMB} MB) melebihi batas maksimal 10MB!`)
+      setFiles((prev) => ({ ...prev, [reqId]: file }))
+      return
+    }
+
+    // Format validation
+    if (requirement) {
+      const ext = file.name.split('.').pop()?.toLowerCase() || ''
+      const tf = (requirement.tipe_file || '').toUpperCase()
+      if (tf.includes('JPG') || tf.includes('PNG') || tf.includes('IMAGE')) {
+        if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+          setErrors((prev) => ({ ...prev, [`req_${reqId}`]: `${requirement.nama_syarat} harus berupa file gambar (JPG, JPEG, atau PNG)` }))
+          toast.error(`Format file ${requirement.nama_syarat} harus gambar (JPG/PNG)`)
+          setFiles((prev) => ({ ...prev, [reqId]: file }))
+          return
+        }
+      } else if (tf.includes('PDF')) {
+        if (ext !== 'pdf') {
+          setErrors((prev) => ({ ...prev, [`req_${reqId}`]: `${requirement.nama_syarat} harus berupa file PDF (.pdf)` }))
+          toast.error(`Format file ${requirement.nama_syarat} harus PDF (.pdf)`)
+          setFiles((prev) => ({ ...prev, [reqId]: file }))
+          return
+        }
+      } else if (tf.includes('DOC')) {
+        if (!['docx', 'doc'].includes(ext)) {
+          setErrors((prev) => ({ ...prev, [`req_${reqId}`]: `${requirement.nama_syarat} harus berupa file Word (.docx atau .doc)` }))
+          toast.error(`Format file ${requirement.nama_syarat} harus Word (.docx/.doc)`)
+          setFiles((prev) => ({ ...prev, [reqId]: file }))
+          return
+        }
+      }
+    }
+
     setFiles((prev) => ({ ...prev, [reqId]: file }))
     if (errors[`req_${reqId}`]) {
       setErrors((prev) => {
@@ -108,12 +158,37 @@ export default function FormPengajuan() {
   }
 
   const handleTtdChange = (file) => {
-    setTtdFile(file)
-    if (file) {
-      setTtdPreview(URL.createObjectURL(file))
-    } else {
+    if (!file) {
+      setTtdFile(null)
       setTtdPreview(null)
+      return
     }
+
+    // Size limit: 5MB
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+      setErrors((prev) => ({
+        ...prev,
+        ttd: `Ukuran tanda tangan digital (${sizeMB} MB) melebihi batas maksimal 5MB`,
+      }))
+      toast.error(`Ukuran file tanda tangan digital (${sizeMB} MB) melebihi batas maksimal 5MB!`)
+      setTtdFile(file)
+      setTtdPreview(null)
+      return
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || ''
+    if (!['png', 'jpg', 'jpeg'].includes(ext)) {
+      setErrors((prev) => ({ ...prev, ttd: 'Format tanda tangan digital harus berupa PNG, JPG, atau JPEG' }))
+      toast.error('Format TTD harus berupa file gambar (PNG/JPG)')
+      setTtdFile(file)
+      setTtdPreview(null)
+      return
+    }
+
+    setTtdFile(file)
+    setTtdPreview(URL.createObjectURL(file))
     if (errors.ttd) {
       setErrors((prev) => {
         const next = { ...prev }
@@ -171,6 +246,12 @@ export default function FormPengajuan() {
           newErrors[`req_${r.id}`] = `${r.nama_syarat} wajib diupload`
           valid = false
         } else if (file) {
+          // File size validation (Max 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2)
+            newErrors[`req_${r.id}`] = `${r.nama_syarat} melebihi ukuran maksimal 10MB (${sizeMB} MB)`
+            valid = false
+          }
           const ext = file.name.split('.').pop()?.toLowerCase() || ''
           const tf = (r.tipe_file || '').toUpperCase()
           if (tf.includes('JPG') || tf.includes('PNG') || tf.includes('IMAGE')) {
@@ -193,13 +274,26 @@ export default function FormPengajuan() {
       })
 
     const hasOldSig = reapplyReq?.file_ttd_digital_path
-    if (Boolean(selectedCat?.ttd_digital) && !ttdFile && !hasOldSig) {
-      newErrors.ttd = 'Tanda tangan digital (PNG/JPG) wajib diunggah'
-      valid = false
+    if (Boolean(selectedCat?.ttd_digital)) {
+      if (!ttdFile && !hasOldSig) {
+        newErrors.ttd = 'Tanda tangan digital (PNG/JPG) wajib diunggah'
+        valid = false
+      } else if (ttdFile) {
+        if (ttdFile.size > 5 * 1024 * 1024) {
+          const sizeMB = (ttdFile.size / (1024 * 1024)).toFixed(2)
+          newErrors.ttd = `Tanda tangan digital melebihi ukuran maksimal 5MB (${sizeMB} MB)`
+          valid = false
+        }
+        const ext = ttdFile.name.split('.').pop()?.toLowerCase() || ''
+        if (!['png', 'jpg', 'jpeg'].includes(ext)) {
+          newErrors.ttd = 'Format tanda tangan digital harus berupa PNG, JPG, atau JPEG'
+          valid = false
+        }
+      }
     }
 
     setErrors(newErrors)
-    if (!valid) toast.error('Lengkapi semua data dan periksa kembali format dokumen Anda')
+    if (!valid) toast.error('Lengkapi semua data dan periksa kembali format serta ukuran dokumen Anda')
     return valid
   }
 
@@ -480,9 +574,15 @@ export default function FormPengajuan() {
                         <input
                           type="file"
                           accept={acceptAttr}
-                          onChange={(e) => handleFileChange(r.id, e.target.files[0])}
+                          onChange={(e) => handleFileChange(r.id, e.target.files[0], r)}
                           className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors[`req_${r.id}`] ? 'file:bg-red-500' : ''}`}
                         />
+                        {files[r.id] && (
+                          <p className={`text-xs mt-1 font-medium ${files[r.id].size > 10 * 1024 * 1024 ? 'text-red-500 font-semibold' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            File dipilih: {files[r.id].name} ({(files[r.id].size / (1024 * 1024)).toFixed(2)} MB)
+                            {files[r.id].size > 10 * 1024 * 1024 && ' — MELEBIHI BATAS 10MB!'}
+                          </p>
+                        )}
                         {errors[`req_${r.id}`] && (
                           <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" /> {errors[`req_${r.id}`]}
@@ -516,6 +616,12 @@ export default function FormPengajuan() {
                       onChange={(e) => handleTtdChange(e.target.files[0])}
                       className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover file:cursor-pointer ${errors.ttd ? 'file:bg-red-500' : ''}`}
                     />
+                    {ttdFile && (
+                      <p className={`text-xs mt-1 font-medium ${ttdFile.size > 5 * 1024 * 1024 ? 'text-red-500 font-semibold' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        TTD dipilih: {ttdFile.name} ({(ttdFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        {ttdFile.size > 5 * 1024 * 1024 && ' — MELEBIHI BATAS 5MB!'}
+                      </p>
+                    )}
                     {errors.ttd && (
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" /> {errors.ttd}
@@ -576,15 +682,21 @@ export default function FormPengajuan() {
               <div>
                 <p className="section-title mb-2">Dokumen</p>
                 <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                  {selectedCat.requirements.map((r) => (
-                    <div key={r.id} className="flex items-center gap-2 text-sm">
-                      <FileText className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                      <span style={{ color: 'var(--text-secondary)' }}>{r.nama_syarat}:</span>
-                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {files[r.id] ? files[r.id].name : 'Belum diupload'}
-                      </span>
-                    </div>
-                  ))}
+                  {selectedCat.requirements.map((r) => {
+                    const f = files[r.id]
+                    const oldReq = reapplyReq?.request_requirements?.find((oldR) => oldR.requirement_id === r.id)
+                    return (
+                      <div key={r.id} className="flex items-center justify-between gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 shrink-0" style={{ color: 'var(--text-muted)' }} />
+                          <span style={{ color: 'var(--text-secondary)' }}>{r.nama_syarat}:</span>
+                        </div>
+                        <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {f ? `${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)` : (oldReq?.file_path ? `Dokumen lama (${oldReq.file_path.split('/').pop()})` : 'Belum diupload')}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}

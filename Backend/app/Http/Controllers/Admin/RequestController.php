@@ -42,6 +42,10 @@ class RequestController extends Controller
             'status' => 'required|in:diterima,diproses,ditolak,selesai',
             'file_surat' => 'nullable|file|mimes:docx,doc,pdf|max:20480',
             'alasan_penolakan' => 'nullable|string|max:1000',
+        ], [
+            'file_surat.max' => 'Ukuran file surat tidak boleh melebihi 20MB.',
+            'file_surat.mimes' => 'File surat harus berformat DOCX, DOC, atau PDF.',
+            'alasan_penolakan.max' => 'Alasan penolakan tidak boleh lebih dari 1000 karakter.',
         ]);
 
         $letterRequest = LetterRequest::with([

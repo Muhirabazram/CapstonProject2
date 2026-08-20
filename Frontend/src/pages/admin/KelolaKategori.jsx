@@ -91,6 +91,18 @@ export default function KelolaKategori() {
     e.preventDefault()
     setSaving(true)
     setFormError('')
+
+    if (form.file_template_permohonan && form.file_template_permohonan.size > 10 * 1024 * 1024) {
+      setFormError(`Ukuran Template Permohonan (${(form.file_template_permohonan.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas maksimal 10MB`)
+      setSaving(false)
+      return
+    }
+    if (form.file_template_pengantar && form.file_template_pengantar.size > 10 * 1024 * 1024) {
+      setFormError(`Ukuran Template Pengantar (${(form.file_template_pengantar.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas maksimal 10MB`)
+      setSaving(false)
+      return
+    }
+
     const fd = new FormData()
     fd.append('nama_kategori', form.nama_kategori)
     fd.append('grup_kategori', form.grup_kategori || 'Akademik')

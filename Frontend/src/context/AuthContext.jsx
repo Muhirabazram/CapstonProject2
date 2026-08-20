@@ -8,12 +8,30 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
-    const savedUser = localStorage.getItem('auth_user')
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser))
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token')
+      const savedUser = localStorage.getItem('auth_user')
+      if (token) {
+        try {
+          const { data } = await api.get('/me')
+          if (data?.data) {
+            setUser(data.data)
+            localStorage.setItem('auth_user', JSON.stringify(data.data))
+          } else if (savedUser) {
+            setUser(JSON.parse(savedUser))
+          }
+        } catch {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('auth_user')
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
+      setLoading(false)
     }
-    setLoading(false)
+
+    checkAuth()
   }, [])
 
   const login = async (username, password) => {

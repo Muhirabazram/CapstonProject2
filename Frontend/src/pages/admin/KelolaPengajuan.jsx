@@ -241,6 +241,11 @@ export default function KelolaPengajuan() {
       }
 
       if (newStatus === 'selesai' && fileSurat) {
+        if (fileSurat.size > 20 * 1024 * 1024) {
+          setDetailError(`Ukuran file surat (${(fileSurat.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas maksimal 20MB.`)
+          setSaving(false)
+          return
+        }
         const fd = new FormData()
         fd.append('status', 'selesai')
         fd.append('file_surat', fileSurat)

@@ -33,9 +33,9 @@ class CategoryController extends Controller
         $request->validate([
             'nama_kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'file_template' => 'nullable|file|mimes:docx',
-            'file_template_permohonan' => 'nullable|file|mimes:docx',
-            'file_template_pengantar' => 'nullable|file|mimes:docx',
+            'file_template' => 'nullable|file|mimes:docx|max:10240',
+            'file_template_permohonan' => 'nullable|file|mimes:docx|max:10240',
+            'file_template_pengantar' => 'nullable|file|mimes:docx|max:10240',
             'ttd_digital' => 'nullable|boolean',
             'requirements' => 'nullable|array',
             'requirements.*.nama_syarat' => 'required|string',
@@ -43,6 +43,10 @@ class CategoryController extends Controller
             'variables' => 'nullable|array',
             'variables.*.nama_variabel' => 'required|string',
             'variables.*.tipe_input_html' => 'required|string',
+        ], [
+            'file_template.max' => 'Ukuran file template maksimal 10MB.',
+            'file_template_permohonan.max' => 'Ukuran file template permohonan maksimal 10MB.',
+            'file_template_pengantar.max' => 'Ukuran file template pengantar maksimal 10MB.',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -131,12 +135,16 @@ class CategoryController extends Controller
         $request->validate([
             'nama_kategori' => 'sometimes|required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'file_template' => 'nullable|file|mimes:docx',
-            'file_template_permohonan' => 'nullable|file|mimes:docx',
-            'file_template_pengantar' => 'nullable|file|mimes:docx',
+            'file_template' => 'nullable|file|mimes:docx|max:10240',
+            'file_template_permohonan' => 'nullable|file|mimes:docx|max:10240',
+            'file_template_pengantar' => 'nullable|file|mimes:docx|max:10240',
             'ttd_digital' => 'nullable',
             'requirements' => 'nullable|array',
             'variables' => 'nullable|array',
+        ], [
+            'file_template.max' => 'Ukuran file template maksimal 10MB.',
+            'file_template_permohonan.max' => 'Ukuran file template permohonan maksimal 10MB.',
+            'file_template_pengantar.max' => 'Ukuran file template pengantar maksimal 10MB.',
         ]);
 
         return DB::transaction(function () use ($request, $category) {
