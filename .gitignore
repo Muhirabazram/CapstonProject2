@@ -32,3 +32,8 @@ Thumbs.db
 ~$*
 *.timestamp-*.mjs
 
+# Local docs (don't push)
+CARA_JALANKAN.txt
+adm_surat_db_clean.sql
+Backend/artisan-pgsql.bat
+
