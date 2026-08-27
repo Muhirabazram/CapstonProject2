@@ -7,7 +7,9 @@ import EmptyState from '../../components/EmptyState'
 import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 import { SkeletonTable } from '../../components/Skeleton'
 import { useToast } from '../../context/ToastContext'
-import { Download, FileText, Clock, Eye, AlertCircle, Edit3, RotateCcw, Calendar, X, Search } from 'lucide-react'
+import { Download, FileText, Clock, Eye, AlertCircle, Edit3, RotateCcw, Calendar, X, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const PER_PAGE = 10
 
 function formatDate(d) {
   if (!d) return '-'
@@ -19,6 +21,7 @@ function formatDate(d) {
 export default function RiwayatStatus() {
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
@@ -89,6 +92,11 @@ export default function RiwayatStatus() {
       return matchSearch && matchStatus && matchCategory && matchDate
     })
   }, [requests, filterStatus, filterCategory, startDate, endDate, search])
+
+  const totalPages = Math.ceil(filteredRequests.length / PER_PAGE)
+  const paged = filteredRequests.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
+  useEffect(() => { setPage(1) }, [search, filterStatus, filterCategory, startDate, endDate])
 
   const handlePreviewResult = async (req) => {
     try {
@@ -323,7 +331,7 @@ export default function RiwayatStatus() {
                   ) : filteredRequests.length === 0 ? (
                     <tr><td colSpan={5}><EmptyState message={filterStatus || startDate || endDate || search ? "Tidak ada pengajuan ditemukan" : "Belum ada riwayat pengajuan"} icon={FileText} /></td></tr>
                   ) : (
-                    filteredRequests.map((req) => (
+                    paged.map((req) => (
                       <tr
                         key={req.id}
                         className={`table-row cursor-pointer ${selectedId === req.id ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
@@ -354,6 +362,46 @@ export default function RiwayatStatus() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--border-color)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Halaman {page} dari {totalPages} ({filteredRequests.length} data)
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="p-2 rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${n === page
+                          ? 'bg-primary text-white'
+                          : 'hover:bg-navy-100 dark:hover:bg-navy-800'
+                        }`}
+                      style={n === page ? {} : { color: 'var(--text-secondary)' }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="p-2 rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

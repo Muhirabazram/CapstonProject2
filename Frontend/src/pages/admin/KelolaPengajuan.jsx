@@ -1,4 +1,4 @@
-import { Calendar, Download, Eye, FileText, RotateCcw, Search, X } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Download, Eye, FileText, RotateCcw, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import ConfirmDialog from '../../components/ConfirmDialog'
@@ -9,6 +9,8 @@ import { SkeletonTable } from '../../components/Skeleton'
 import StatusBadge from '../../components/StatusBadge'
 import { useToast } from '../../context/ToastContext'
 
+const PER_PAGE = 10
+
 function formatDate(d) {
   if (!d) return '-'
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
@@ -18,6 +20,7 @@ function formatDate(d) {
 
 export default function KelolaPengajuan() {
   const [requests, setRequests] = useState([])
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
@@ -91,6 +94,11 @@ export default function KelolaPengajuan() {
 
     return matchSearch && matchStatus && matchCategory && matchDate
   })
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
+  useEffect(() => { setPage(1) }, [search, filterStatus, filterCategory, startDate, endDate])
 
   const openDetail = (req) => {
     setSelected(req)
@@ -385,7 +393,7 @@ export default function KelolaPengajuan() {
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={6}><EmptyState message="Tidak ada pengajuan ditemukan" icon={FileText} /></td></tr>
               ) : (
-                filtered.map((req) => (
+                paged.map((req) => (
                   <tr key={req.id} className="table-row">
                     <td className="px-6 py-3 font-mono text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                       #REQ-{String(req.id).padStart(3, '0')}
@@ -411,6 +419,46 @@ export default function KelolaPengajuan() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Halaman {page} dari {totalPages} ({filtered.length} data)
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setPage(n)}
+                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${n === page
+                      ? 'bg-primary text-white'
+                      : 'hover:bg-navy-100 dark:hover:bg-navy-800'
+                    }`}
+                  style={n === page ? {} : { color: 'var(--text-secondary)' }}
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 rounded-lg transition-colors hover:bg-navy-100 dark:hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Detail Modal */}
